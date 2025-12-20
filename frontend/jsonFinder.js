@@ -6,11 +6,15 @@
 
 // Note: API_BASE is defined in app.js, don't redeclare it here
 
+// Constants
+const MAX_UNDO_HISTORY = 5; // Maximum number of undo steps
+
 // JSON Finder specific state
 let jsonFinderState = {
     expandedPaths: new Set(), // Track which paths are expanded
     selectedPath: null,
-    selectedValue: null
+    selectedValue: null,
+    jsonHistory: [] // Track JSON input history for undo: [{value, cursorPos}]
 };
 
 /**
@@ -96,6 +100,7 @@ function renderFinderMode() {
                             style="position: relative; z-index: 2; background: ${state.darkMode ? '#111827' : '#ffffff'}; overflow-x: auto; overflow-y: auto; white-space: pre; word-wrap: normal; overflow-wrap: normal; font-size: 14px; line-height: 1.7; font-family: 'SF Mono', 'Monaco', 'Menlo', 'Consolas', 'Courier New', monospace;"
                             placeholder="Paste your JSON here or start typing..."
                         oninput="handleJsonFinderInput(this.value)"
+                        onkeydown="if((event.ctrlKey || event.metaKey) && event.key === 'z') { event.preventDefault(); undoJsonInput(); }"
                     >${state.json1 && state.json1 !== '{}' ? state.json1 : ''}</textarea>
                     </div>
                     </div>
@@ -172,12 +177,9 @@ function renderFinderMode() {
 }
 
 /**
- * Handle JSON input changes
+ * Validate JSON and update error state
  */
-async function handleJsonFinderInput(value) {
-    state.json1 = value;
-    
-    // Validate JSON
+function validateJsonInput(value) {
     if (value && value.trim() && value !== '{}') {
         try {
             JSON.parse(value);
@@ -188,14 +190,82 @@ async function handleJsonFinderInput(value) {
     } else {
         state.errors.json1 = null;
     }
+}
+
+/**
+ * Restore cursor position in textarea after render
+ */
+function restoreCursorPosition(textarea, cursorPos, value) {
+    if (!textarea) return;
     
-    // Re-render first to update the UI
+    textarea.value = value;
+    const safeCursorPos = Math.min(cursorPos, value.length);
+    textarea.setSelectionRange(safeCursorPos, safeCursorPos);
+    textarea.focus();
+}
+
+/**
+ * Save current state to undo history
+ */
+function saveToHistory(value, cursorPos) {
+    if (value === undefined || value === null) return;
+    
+    jsonFinderState.jsonHistory.push({ value, cursorPos });
+    
+    // Keep only last N changes (remove oldest if exceeds limit)
+    if (jsonFinderState.jsonHistory.length > MAX_UNDO_HISTORY) {
+        jsonFinderState.jsonHistory.shift();
+    }
+}
+
+/**
+ * Apply JSON value and update UI
+ */
+function applyJsonValue(value, cursorPos = 0) {
+    state.json1 = value;
+    validateJsonInput(value);
     render();
     
-    // Then update tree view after render completes (DOM needs to be ready)
+    // Restore cursor position after render
+    setTimeout(() => {
+        const textarea = document.getElementById('json-finder-input');
+        restoreCursorPosition(textarea, cursorPos, value);
+    }, 0);
+    
+    // Update tree view
     setTimeout(async () => {
-    await updateJsonFinderTree();
+        await updateJsonFinderTree();
     }, 10);
+}
+
+/**
+ * Handle JSON input changes
+ */
+async function handleJsonFinderInput(value) {
+    const textarea = document.getElementById('json-finder-input');
+    const cursorPos = textarea ? textarea.selectionStart : 0;
+    
+    // Save previous state to history before updating
+    if (state.json1 !== value && state.json1 !== undefined && state.json1 !== null) {
+        saveToHistory(state.json1, textarea ? textarea.selectionStart : 0);
+    }
+    
+    // Apply new value
+    applyJsonValue(value, cursorPos);
+}
+
+/**
+ * Undo last change in JSON input (Ctrl+Z / Command+Z)
+ * Supports undoing up to MAX_UNDO_HISTORY previous changes
+ */
+function undoJsonInput() {
+    if (jsonFinderState.jsonHistory.length === 0) return;
+    
+    // Get the most recent change (LIFO - Last In First Out)
+    const history = jsonFinderState.jsonHistory.pop();
+    
+    // Apply the previous state
+    applyJsonValue(history.value, history.cursorPos || 0);
 }
 
 
