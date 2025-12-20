@@ -304,32 +304,6 @@ function renderJsonTree(obj, container, path, level, key = null) {
         }
     };
     
-    // Handle click - select path and value
-    nodeDiv.onclick = async (e) => {
-        e.stopPropagation();
-        jsonFinderState.selectedPath = path;
-        
-        // Get value at path (convert x to $ for API)
-        const apiPath = convertPathFromX(path);
-        try {
-            const response = await fetch(`${API_BASE}/api/value`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    json: state.json1,
-                    path: apiPath
-                })
-            });
-            const data = await response.json();
-            jsonFinderState.selectedValue = data.value;
-        } catch (error) {
-            console.error('Error getting value:', error);
-            jsonFinderState.selectedValue = null;
-        }
-        
-        render();
-    };
-    
     // Handle primitive values
     if (obj === null || obj === undefined) {
         if (key !== null) {
@@ -392,6 +366,33 @@ function renderJsonTree(obj, container, path, level, key = null) {
         valueSpan.setAttribute('style', `color: ${valueColor} !important;`);
         valueSpan.textContent = valueText;
         nodeDiv.appendChild(valueSpan);
+        
+        // Handle click - select path and value for leaf nodes
+        nodeDiv.onclick = async (e) => {
+            e.stopPropagation();
+            jsonFinderState.selectedPath = path;
+            
+            // Get value at path (convert x to $ for API)
+            const apiPath = convertPathFromX(path);
+            try {
+                const response = await fetch(`${API_BASE}/api/value`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        json: state.json1,
+                        path: apiPath
+                    })
+                });
+                const data = await response.json();
+                jsonFinderState.selectedValue = data.value;
+            } catch (error) {
+                console.error('Error getting value:', error);
+                jsonFinderState.selectedValue = null;
+            }
+            
+            render();
+        };
+        
         container.appendChild(nodeDiv);
         return;
     }
@@ -401,15 +402,19 @@ function renderJsonTree(obj, container, path, level, key = null) {
     const keys = isArray ? obj.map((_, i) => i) : Object.keys(obj);
     const hasChildren = keys.length > 0;
     
-    // Expand/collapse icon for objects/arrays
+    // Expand/collapse icon for objects/arrays - Larger and more visible
     if (hasChildren) {
         const icon = document.createElement('span');
         icon.textContent = isExpanded ? '▼' : '▶';
         icon.style.cursor = 'pointer';
-        icon.style.marginRight = '6px';
-        icon.style.fontSize = '10px';
+        icon.style.marginRight = '8px';
+        icon.style.fontSize = '16px';
+        icon.style.fontWeight = 'bold';
         icon.style.color = state.darkMode ? '#9ca3af' : '#6b7280';
         icon.style.userSelect = 'none';
+        icon.style.display = 'inline-block';
+        icon.style.minWidth = '20px';
+        icon.style.textAlign = 'center';
         icon.onclick = (e) => {
             e.stopPropagation();
             if (jsonFinderState.expandedPaths.has(path)) {
@@ -441,6 +446,44 @@ function renderJsonTree(obj, container, path, level, key = null) {
     valueSpan.setAttribute('style', `color: ${state.darkMode ? '#d4d4d8' : '#52525b'} !important; font-style: italic;`);
     valueSpan.textContent = isArray ? `Array(${obj.length})` : `Object(${Object.keys(obj).length})`;
     nodeDiv.appendChild(valueSpan);
+    
+    // Handle click on entire line - expand/collapse if has children, otherwise select path and value
+    nodeDiv.onclick = async (e) => {
+        e.stopPropagation();
+        
+        // If it has children, toggle expand/collapse
+        if (hasChildren) {
+            if (jsonFinderState.expandedPaths.has(path)) {
+                jsonFinderState.expandedPaths.delete(path);
+            } else {
+                jsonFinderState.expandedPaths.add(path);
+            }
+            updateJsonFinderTree();
+        } else {
+            // For leaf nodes, select path and value
+            jsonFinderState.selectedPath = path;
+            
+            // Get value at path (convert x to $ for API)
+            const apiPath = convertPathFromX(path);
+            try {
+                const response = await fetch(`${API_BASE}/api/value`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        json: state.json1,
+                        path: apiPath
+                    })
+                });
+                const data = await response.json();
+                jsonFinderState.selectedValue = data.value;
+            } catch (error) {
+                console.error('Error getting value:', error);
+                jsonFinderState.selectedValue = null;
+            }
+            
+            render();
+        }
+    };
     
     container.appendChild(nodeDiv);
     
