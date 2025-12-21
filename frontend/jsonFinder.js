@@ -47,11 +47,33 @@ function renderFinderMode() {
                 <!-- Left Panel: JSON Input -->
                 <div class="${bgClass} flex flex-col" style="overflow: hidden; border-right: 1px solid ${state.darkMode ? '#374151' : '#e5e7eb'};">
                     <!-- Toolbar with buttons -->
-                    <div class="flex items-center justify-between px-3 py-2 border-b ${borderClass}" style="flex-shrink: 0; background: ${state.darkMode ? '#1f2937' : '#f9fafb'};">
+                      <div class="flex items-center justify-between px-3 py-1 border-b ${borderClass}" style="flex-shrink: 0; background: ${state.darkMode ? '#1f2937' : '#f9fafb'};">
                         <h2 class="text-base font-semibold ${textClass} flex items-center gap-1.5">
                             <span>JSON Input</span>
                         </h2>
                         <div class="flex gap-1.5">
+                            <button 
+                                onclick="downloadJsonInput()" 
+                                class="px-3 py-1 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded text-xs font-medium hover:from-emerald-600 hover:to-emerald-700 transition-all flex items-center justify-center"
+                                title="Download JSON file"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="7 10 12 15 17 10"></polyline>
+                                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                                </svg>
+                            </button>
+                            <label 
+                                class="px-3 py-1 bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded text-xs font-medium hover:from-teal-600 hover:to-teal-700 transition-all flex items-center justify-center cursor-pointer"
+                                title="Upload JSON file"
+                            >
+                                <input type="file" accept=".json,application/json" onchange="uploadJsonInput(event)" style="display: none;" />
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="17 8 12 3 7 8"></polyline>
+                                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                                </svg>
+                            </label>
                             <button 
                                 onclick="copyJsonInput()" 
                                 class="px-3 py-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded text-xs font-medium hover:from-blue-600 hover:to-blue-700 transition-all flex items-center justify-center"
@@ -100,7 +122,7 @@ function renderFinderMode() {
                     </div>
                     
                     <!-- Search Bar for Left Panel (Non-functional) -->
-                    <div class="px-3 py-1.5 border-b ${borderClass}" style="flex-shrink: 0; background: ${state.darkMode ? '#1f2937' : '#f9fafb'};">
+                    <div class="px-2 py-1 border-b ${borderClass}" style="flex-shrink: 0; background: ${state.darkMode ? '#1f2937' : '#f9fafb'};">
                         <div class="flex items-center gap-1.5">
                             <input 
                                 type="text" 
@@ -112,9 +134,9 @@ function renderFinderMode() {
                         </div>
                     </div>
                     
-                    <div class="p-2 flex flex-col" style="flex: 1; min-height: 0;">
+                    <div class="px-2 pt-0 pb-2 flex flex-col" style="flex: 1; min-height: 0;">
                     ${jsonError ? `
-                            <div class="mb-2 p-2 bg-red-50 border-l-4 border-red-500 text-red-700 rounded text-xs flex items-center gap-1.5" style="flex-shrink: 0;">
+                            <div class="mb-1 p-2 bg-red-50 border-l-4 border-red-500 text-red-700 rounded text-xs flex items-center gap-1.5" style="flex-shrink: 0;">
                                 <span>${jsonError}</span>
                         </div>
                     ` : ''}
@@ -150,7 +172,7 @@ function renderFinderMode() {
                 <!-- Right Panel: Tree View / Viewer View -->
                 <div class="${bgClass} flex flex-col" style="overflow: hidden;">
                     <!-- View Toggle Header -->
-                    <div class="flex justify-between items-center px-3 py-2 border-b ${borderClass}" style="flex-shrink: 0; background: ${state.darkMode ? '#1f2937' : '#f9fafb'};">
+                    <div class="flex justify-between items-center px-3 py-1 border-b ${borderClass}" style="flex-shrink: 0; background: ${state.darkMode ? '#1f2937' : '#f9fafb'};">
                         <h2 class="text-base font-semibold ${textClass} flex items-center gap-1.5">
                             <span>View</span>
                         </h2>
@@ -174,7 +196,7 @@ function renderFinderMode() {
                     
                     ${jsonFinderState.viewMode === 'treePath' ? `
                         <!-- Search Bar for Tree View (Non-functional) -->
-                        <div class="px-3 py-1.5 border-b ${borderClass}" style="flex-shrink: 0; background: ${state.darkMode ? '#1f2937' : '#f9fafb'};">
+                        <div class="px-2 py-1 border-b ${borderClass}" style="flex-shrink: 0; background: ${state.darkMode ? '#1f2937' : '#f9fafb'};">
                             <div class="flex items-center gap-1.5">
                                     <input 
                                         type="text" 
@@ -186,14 +208,14 @@ function renderFinderMode() {
                             </div>
                         </div>
                         
-                        <div class="px-2 pt-1 pb-0" style="flex-shrink: 0;">
+                        <div class="px-2 pt-0 pb-0" style="flex-shrink: 0;">
                             <!-- Path Display - Simple one line -->
-                            <div class="py-0.5 px-1.5 rounded border-2 ${state.darkMode ? 'bg-gray-900 border-blue-600' : 'bg-blue-50 border-blue-300'}" style="margin: 0;">
+                            <div class="py-2 px-1.5 rounded border-2 ${state.darkMode ? 'bg-gray-900 border-indigo-500' : 'bg-indigo-50 border-indigo-400'}" style="margin: 0;">
                                 <div class="flex items-center gap-1.5">
-                                    <label class="text-xs font-bold ${state.darkMode ? 'text-blue-300' : 'text-blue-700'} whitespace-nowrap flex items-center gap-0.5">
+                                    <label class="text-xs font-bold ${state.darkMode ? 'text-indigo-300' : 'text-indigo-700'} whitespace-nowrap flex items-center gap-0.5">
                                         <span>Path:</span>
                                     </label>
-                                    <span id="json-finder-path-display" class="flex-1 text-xs font-mono ${state.darkMode ? 'text-blue-200' : 'text-blue-800'}">
+                                    <span id="json-finder-path-display" class="flex-1 text-xs font-mono ${state.darkMode ? 'text-indigo-200' : 'text-indigo-800'}">
                                         ${jsonFinderState.selectedPath ? convertPathToX(jsonFinderState.selectedPath) : 'Select an item to view its path'}
                                     </span>
                                     <button 
@@ -216,7 +238,7 @@ function renderFinderMode() {
                             </div>
                     </div>
                     
-                        <div class="p-2 flex flex-col" style="flex: 1; min-height: 0;">
+                        <div class="px-2 pt-0 pb-2 flex flex-col" style="flex: 1; min-height: 0;">
                     <!-- Tree View Container -->
                     <div 
                         id="json-finder-tree" 
@@ -232,7 +254,7 @@ function renderFinderMode() {
                         </div>
                     ` : `
                         <!-- Search Bar for Tree Viewer (Non-functional) -->
-                        <div class="px-3 py-1.5 border-b ${borderClass}" style="flex-shrink: 0; background: ${state.darkMode ? '#1f2937' : '#f9fafb'};">
+                        <div class="px-2 py-1 border-b ${borderClass}" style="flex-shrink: 0; background: ${state.darkMode ? '#1f2937' : '#f9fafb'};">
                             <div class="flex items-center gap-1.5">
                                 <input 
                                     type="text" 
@@ -245,7 +267,7 @@ function renderFinderMode() {
                         </div>
                         
                         <!-- Tree Viewer Container -->
-                        <div class="p-2 flex flex-col" style="flex: 1; min-height: 0;">
+                        <div class="px-2 pt-0 pb-2 flex flex-col" style="flex: 1; min-height: 0;">
                         <div 
                             id="json-finder-tree-viewer" 
                             class="flex-1 overflow-auto ${state.darkMode ? 'bg-gray-900' : 'bg-white'} rounded border ${borderClass}"
@@ -1085,6 +1107,83 @@ async function copyJsonFinderValue() {
 }
 
 /**
+ * Download JSON input as file
+ */
+function downloadJsonInput() {
+    const jsonText = state.json1 && state.json1.trim() && state.json1 !== '{}' ? state.json1.trim() : '';
+    
+    if (!jsonText) {
+        alert('No JSON to download. Please enter some JSON first.');
+        return;
+    }
+    
+    try {
+        JSON.parse(jsonText); // Validate
+        const blob = new Blob([jsonText], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'data.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        const buttons = document.querySelectorAll('button[onclick="downloadJsonInput()"]');
+        if (buttons.length > 0) {
+            showButtonPopup(buttons[0], 'JSON file downloaded!');
+        }
+    } catch (error) {
+        if (error instanceof SyntaxError) {
+            alert('Invalid JSON. Please fix errors before downloading.');
+        } else {
+            console.error('Failed to download JSON:', error);
+            alert('Failed to download JSON file');
+        }
+    }
+}
+
+/**
+ * Upload JSON file from computer
+ */
+function uploadJsonInput(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    if (!file.name.endsWith('.json') && file.type !== 'application/json') {
+        alert('Please select a valid JSON file.');
+        event.target.value = '';
+        return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const fileContent = e.target.result;
+            JSON.parse(fileContent); // Validate
+            state.json1 = fileContent;
+            handleJsonFinderInput(fileContent);
+            
+            const uploadButtons = document.querySelectorAll('label[title="Upload JSON file"]');
+            if (uploadButtons.length > 0) {
+                showButtonPopup(uploadButtons[0], 'JSON file uploaded!');
+            }
+        } catch (error) {
+            alert('Invalid JSON file. Please check the file content.');
+            console.error('Failed to parse uploaded JSON:', error);
+        }
+        event.target.value = '';
+    };
+    
+    reader.onerror = function() {
+        alert('Failed to read file. Please try again.');
+        event.target.value = '';
+    };
+    
+    reader.readAsText(file);
+}
+
+/**
  * Copy JSON input to clipboard
  */
 async function copyJsonInput() {
@@ -1192,13 +1291,6 @@ function showButtonPopup(button, message) {
 }
 
 /**
- * Show popup tooltip for share button (wrapper function)
- */
-function showSharePopup(button) {
-    showButtonPopup(button, 'Share link copied!');
-}
-
-/**
  * Share JSON input by creating a shareable link
  */
 async function shareJsonInput() {
@@ -1291,7 +1383,7 @@ async function shareJsonInput() {
         });
         
         // Show popup tooltip near the share button
-        showSharePopup(buttons[0]);
+        showButtonPopup(buttons[0], 'Share link copied!');
     } catch (error) {
         if (error instanceof SyntaxError) {
             alert('Invalid JSON. Please fix errors before sharing.');
