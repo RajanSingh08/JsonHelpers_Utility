@@ -9,9 +9,86 @@ let state = {
     darkMode: true
 };
 
+/**
+ * Clean up expired shared JSON entries from localStorage
+ */
+function cleanupExpiredShares() {
+    try {
+        const now = Date.now();
+        const keysToRemove = [];
+        
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith('json_share_')) {
+                try {
+                    const storedData = JSON.parse(localStorage.getItem(key));
+                    if (now - storedData.timestamp > storedData.expiresIn) {
+                        keysToRemove.push(key);
+                    }
+                } catch (e) {
+                    // Invalid data, remove it
+                    keysToRemove.push(key);
+                }
+            }
+        }
+        
+        keysToRemove.forEach(key => localStorage.removeItem(key));
+    } catch (e) {
+        console.warn('Failed to cleanup expired shares:', e);
+    }
+}
+
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
     try {
+        // Check if JSON is provided in URL
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        // Check for share ID first (for large JSON stored in localStorage)
+        const shareId = urlParams.get('id');
+        if (shareId) {
+            try {
+                const storageKey = `json_share_${shareId}`;
+                const storedData = localStorage.getItem(storageKey);
+                
+                if (storedData) {
+                    const shareData = JSON.parse(storedData);
+                    const now = Date.now();
+                    
+                    // Check if expired
+                    if (now - shareData.timestamp > shareData.expiresIn) {
+                        localStorage.removeItem(storageKey);
+                        alert('This shared link has expired (24 hours).');
+                    } else {
+                        // Validate it's valid JSON
+                        JSON.parse(shareData.json);
+                        state.json1 = shareData.json;
+                        // Clean up old expired entries
+                        cleanupExpiredShares();
+                    }
+                } else {
+                    alert('Shared link not found or has expired.');
+                }
+            } catch (e) {
+                console.warn('Failed to load shared JSON from localStorage:', e);
+                alert('Failed to load shared JSON. The link may have expired.');
+            }
+        } else {
+            // Check for direct JSON in URL (for small JSON)
+            const jsonParam = urlParams.get('json');
+            if (jsonParam) {
+                try {
+                    // Decode base64 JSON from URL
+                    const decodedJson = decodeURIComponent(escape(atob(jsonParam)));
+                    // Validate it's valid JSON
+                    JSON.parse(decodedJson);
+                    state.json1 = decodedJson;
+                } catch (e) {
+                    console.warn('Invalid JSON in URL parameter:', e);
+                }
+            }
+        }
+        
         render();
     } catch (error) {
         console.error('Error during initialization:', error);

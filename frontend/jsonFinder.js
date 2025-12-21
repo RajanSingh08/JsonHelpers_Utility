@@ -53,6 +53,29 @@ function renderFinderMode() {
                         </h2>
                         <div class="flex gap-1.5">
                             <button 
+                                onclick="copyJsonInput()" 
+                                class="px-3 py-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded text-xs font-medium hover:from-blue-600 hover:to-blue-700 transition-all flex items-center justify-center"
+                                title="Copy JSON to clipboard"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                </svg>
+                            </button>
+                            <button 
+                                onclick="shareJsonInput()" 
+                                class="px-3 py-1 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded text-xs font-medium hover:from-indigo-600 hover:to-indigo-700 transition-all flex items-center justify-center"
+                                title="Create shareable link"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="18" cy="5" r="3"></circle>
+                                    <circle cx="6" cy="12" r="3"></circle>
+                                    <circle cx="18" cy="19" r="3"></circle>
+                                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                                </svg>
+                            </button>
+                            <button 
                                 onclick="handleJsonFinderFormat()" 
                                 class="px-3 py-1 bg-gradient-to-r from-green-500 to-green-600 text-white rounded text-xs font-medium hover:from-green-600 hover:to-green-700 transition-all flex items-center gap-1"
                                 title="Format/Beautify JSON with color highlighting"
@@ -374,18 +397,15 @@ function renderJsonViewer(obj) {
     let html = '';
     let inString = false;
     let currentValue = '';
-    let valueType = null;
     
     for (let i = 0; i < jsonString.length; i++) {
         const char = jsonString[i];
-        const nextChar = jsonString[i + 1];
         
         if (char === '"' && jsonString[i - 1] !== '\\') {
             if (!inString) {
                 // Start of string
                 inString = true;
                 currentValue = '"';
-                valueType = null;
             } else {
                 // End of string
                 currentValue += '"';
@@ -1064,6 +1084,223 @@ async function copyJsonFinderValue() {
     }
 }
 
+/**
+ * Copy JSON input to clipboard
+ */
+async function copyJsonInput() {
+    const jsonText = state.json1 && state.json1.trim() && state.json1 !== '{}' ? state.json1.trim() : '';
+    
+    if (!jsonText) {
+        alert('No JSON to copy. Please enter some JSON first.');
+        return;
+    }
+    
+    try {
+        await navigator.clipboard.writeText(jsonText);
+        
+        // Show feedback - temporarily show checkmark icon
+        const buttons = document.querySelectorAll('button[onclick="copyJsonInput()"]');
+        buttons.forEach(btn => {
+            const originalContent = btn.innerHTML;
+            // Temporarily show checkmark icon
+            btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+            btn.style.opacity = '0.8';
+            setTimeout(() => {
+                btn.innerHTML = originalContent;
+                btn.style.opacity = '1';
+            }, 2000);
+        });
+        
+        // Show popup tooltip near the copy button
+        if (buttons.length > 0) {
+            showButtonPopup(buttons[0], 'JSON Copied!');
+        }
+    } catch (error) {
+        console.error('Failed to copy JSON:', error);
+        alert('Failed to copy JSON to clipboard');
+    }
+}
+
+/**
+ * Generate a short random ID
+ */
+function generateShortId() {
+    return Math.random().toString(36).substring(2, 11) + Date.now().toString(36).substring(2, 8);
+}
+
+/**
+ * Show popup tooltip near a button
+ */
+function showButtonPopup(button, message) {
+    if (!button) return;
+    
+    // Remove any existing popup
+    const existingPopup = document.getElementById('button-popup-tooltip');
+    if (existingPopup) {
+        existingPopup.remove();
+    }
+    
+    // Create popup element
+    const popup = document.createElement('div');
+    popup.id = 'button-popup-tooltip';
+    popup.textContent = message;
+    popup.style.cssText = `
+        position: fixed;
+        background-color: ${state.darkMode ? '#1f2937' : '#374151'};
+        color: white;
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 500;
+        white-space: nowrap;
+        z-index: 10000;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        pointer-events: none;
+        animation: fadeInOut 2s ease-in-out;
+    `;
+    
+    // Add animation keyframes if not already added
+    if (!document.getElementById('button-popup-animation')) {
+        const style = document.createElement('style');
+        style.id = 'button-popup-animation';
+        style.textContent = `
+            @keyframes fadeInOut {
+                0% { opacity: 0; transform: translateY(-5px); }
+                15% { opacity: 1; transform: translateY(0); }
+                85% { opacity: 1; transform: translateY(0); }
+                100% { opacity: 0; transform: translateY(-5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    // Position popup relative to button
+    document.body.appendChild(popup);
+    const buttonRect = button.getBoundingClientRect();
+    const popupRect = popup.getBoundingClientRect();
+    
+    // Position above the button, centered
+    popup.style.left = `${buttonRect.left + (buttonRect.width / 2) - (popupRect.width / 2)}px`;
+    popup.style.top = `${buttonRect.top - popupRect.height - 8}px`;
+    
+    // Remove popup after animation
+    setTimeout(() => {
+        if (popup.parentNode) {
+            popup.remove();
+        }
+    }, 2000);
+}
+
+/**
+ * Show popup tooltip for share button (wrapper function)
+ */
+function showSharePopup(button) {
+    showButtonPopup(button, 'Share link copied!');
+}
+
+/**
+ * Share JSON input by creating a shareable link
+ */
+async function shareJsonInput() {
+    const jsonText = state.json1 && state.json1.trim() && state.json1 !== '{}' ? state.json1.trim() : '';
+    
+    if (!jsonText) {
+        alert('No JSON to share. Please enter some JSON first.');
+        return;
+    }
+    
+    try {
+        // Validate JSON first
+        JSON.parse(jsonText);
+        
+        // Clean up expired entries first to free up space
+        if (typeof cleanupExpiredShares === 'function') {
+            cleanupExpiredShares();
+        }
+        
+        // Check JSON size (localStorage limit is typically 5-10MB)
+        const jsonSize = new Blob([jsonText]).size;
+        const maxSize = 4 * 1024 * 1024; // 4MB limit (conservative, leaving room for metadata)
+        
+        if (jsonSize > maxSize) {
+            alert(`JSON is too large to share (${(jsonSize / 1024 / 1024).toFixed(2)}MB). Maximum size is 4MB. Please use the Copy button instead.`);
+            return;
+        }
+        
+        // Always use localStorage with short ID for consistent short links
+        const shareId = generateShortId();
+        const storageKey = `json_share_${shareId}`;
+        
+        // Store JSON in localStorage with expiration (24 hours)
+        const shareData = {
+            json: jsonText,
+            timestamp: Date.now(),
+            expiresIn: 24 * 60 * 60 * 1000 // 24 hours
+        };
+        
+        try {
+            localStorage.setItem(storageKey, JSON.stringify(shareData));
+        } catch (storageError) {
+            // localStorage might be full or disabled
+            console.error('Failed to store in localStorage:', storageError);
+            
+            // Try to clean up more aggressively and retry once
+            if (typeof cleanupExpiredShares === 'function') {
+                cleanupExpiredShares();
+                // Try to remove some old entries manually
+                try {
+                    const keysToRemove = [];
+                    for (let i = 0; i < localStorage.length; i++) {
+                        const key = localStorage.key(i);
+                        if (key && key.startsWith('json_share_')) {
+                            keysToRemove.push(key);
+                        }
+                    }
+                    // Remove oldest 5 entries
+                    keysToRemove.slice(0, 5).forEach(key => localStorage.removeItem(key));
+                    
+                    // Retry storing
+                    localStorage.setItem(storageKey, JSON.stringify(shareData));
+                } catch (retryError) {
+                    alert('Storage is full. Please clear some space or use the Copy button instead.');
+                    return;
+                }
+            } else {
+                alert('Storage is full. Please clear some space or use the Copy button instead.');
+                return;
+            }
+        }
+        
+        // Create shareable link with index.html (always use /index.html format)
+        const shareUrl = `${window.location.origin}/index.html?id=${shareId}`;
+        
+        // Copy link to clipboard
+        await navigator.clipboard.writeText(shareUrl);
+        
+        // Show button feedback - temporarily show checkmark icon
+        const buttons = document.querySelectorAll('button[onclick="shareJsonInput()"]');
+        buttons.forEach(btn => {
+            const originalContent = btn.innerHTML;
+            // Temporarily show checkmark icon
+            btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+            btn.style.opacity = '0.8';
+            setTimeout(() => {
+                btn.innerHTML = originalContent;
+                btn.style.opacity = '1';
+            }, 2000);
+        });
+        
+        // Show popup tooltip near the share button
+        showSharePopup(buttons[0]);
+    } catch (error) {
+        if (error instanceof SyntaxError) {
+            alert('Invalid JSON. Please fix errors before sharing.');
+        } else {
+            console.error('Failed to share JSON:', error);
+            alert('Failed to create shareable link');
+        }
+    }
+}
 
 /**
  * Format JSON (Beautify)

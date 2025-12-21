@@ -1,6 +1,5 @@
-from flask import Flask, request, jsonify
+from flask import Flask
 from flask_cors import CORS
-import json
 
 # Import blueprints for modular organization
 from json_finder import json_finder_bp
