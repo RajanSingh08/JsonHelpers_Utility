@@ -47,11 +47,36 @@ function renderFinderMode() {
                 <!-- Left Panel: JSON Input -->
                 <div class="${bgClass} flex flex-col" style="overflow: hidden; border-right: 1px solid ${state.darkMode ? '#374151' : '#e5e7eb'};">
                     <!-- Toolbar with buttons -->
-                      <div class="flex items-center justify-between px-3 py-1 border-b ${borderClass}" style="flex-shrink: 0; background: ${state.darkMode ? '#1f2937' : '#f9fafb'};">
-                        <h2 class="text-base font-semibold ${textClass} flex items-center gap-1.5">
-                            <span>JSON Input</span>
-                        </h2>
-                        <div class="flex gap-1.5">
+                      <div class="flex items-center px-3 py-1 border-b ${borderClass}" style="flex-shrink: 0; background: ${state.darkMode ? '#1f2937' : '#f9fafb'};">
+                        <div class="flex items-center gap-1.5 flex-1">
+                            <button 
+                                onclick="handleJsonFinderFormat()" 
+                                class="px-3 py-1 bg-gradient-to-r from-green-500 to-green-600 text-white rounded text-xs font-medium hover:from-green-600 hover:to-green-700 transition-all flex items-center gap-1"
+                                title="Format/Beautify JSON with color highlighting"
+                            >
+                                <span>Beautify</span>
+                            </button>
+                            <button 
+                                onclick="handleJsonFinderMinify()" 
+                                class="px-3 py-1 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded text-xs font-medium hover:from-purple-600 hover:to-purple-700 transition-all flex items-center gap-1"
+                                title="Minify JSON (remove whitespace)"
+                            >
+                                <span>Minify</span>
+                            </button>
+                            <button 
+                                onclick="handleJsonFinderReset()" 
+                                class="px-3 py-1 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded text-xs font-medium hover:from-gray-600 hover:to-gray-700 transition-all flex items-center gap-1"
+                                title="Clear JSON input"
+                            >
+                                <span>Reset</span>
+                            </button>
+                        </div>
+                        <div class="flex items-center justify-center flex-1">
+                            <h2 class="text-base font-semibold ${textClass} flex items-center gap-1.5">
+                                <span>JSON Input</span>
+                            </h2>
+                        </div>
+                        <div class="flex gap-1.5 flex-1 justify-end">
                             <button 
                                 onclick="downloadJsonInput()" 
                                 class="px-3 py-1 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded text-xs font-medium hover:from-emerald-600 hover:to-emerald-700 transition-all flex items-center justify-center"
@@ -97,39 +122,18 @@ function renderFinderMode() {
                                     <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
                                 </svg>
                             </button>
-                            <button 
-                                onclick="handleJsonFinderFormat()" 
-                                class="px-3 py-1 bg-gradient-to-r from-green-500 to-green-600 text-white rounded text-xs font-medium hover:from-green-600 hover:to-green-700 transition-all flex items-center gap-1"
-                                title="Format/Beautify JSON with color highlighting"
-                            >
-                                <span>Beautify</span>
-                            </button>
-                            <button 
-                                onclick="handleJsonFinderMinify()" 
-                                class="px-3 py-1 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded text-xs font-medium hover:from-purple-600 hover:to-purple-700 transition-all flex items-center gap-1"
-                                title="Minify JSON (remove whitespace)"
-                            >
-                                <span>Minify</span>
-                            </button>
-                            <button 
-                                onclick="handleJsonFinderReset()" 
-                                class="px-3 py-1 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded text-xs font-medium hover:from-gray-600 hover:to-gray-700 transition-all flex items-center gap-1"
-                                title="Clear JSON input"
-                            >
-                                <span>Reset</span>
-                            </button>
                         </div>
                     </div>
                     
                     <!-- Search Bar for Left Panel (Non-functional) -->
-                    <div class="px-2 py-1 border-b ${borderClass}" style="flex-shrink: 0; background: ${state.darkMode ? '#1f2937' : '#f9fafb'};">
+                    <div class="px-2 py-1.5 border-b ${borderClass}" style="flex-shrink: 0; background: ${state.darkMode ? '#1f2937' : '#f9fafb'};">
                         <div class="flex items-center gap-1.5">
                             <input 
                                 type="text" 
                                 id="json-finder-search-left" 
                                 placeholder="Search in JSON..." 
                                 disabled
-                                class="flex-1 px-2 py-1 text-xs rounded border ${state.darkMode ? 'bg-gray-900 text-gray-100 border-gray-600' : 'bg-white text-gray-900 border-gray-300'} focus:outline-none focus:ring-1 focus:ring-blue-500 opacity-50 cursor-not-allowed"
+                                class="flex-1 px-2 py-1.5 text-xs rounded border ${state.darkMode ? 'bg-gray-900 text-gray-100 border-gray-600' : 'bg-white text-gray-900 border-gray-300'} focus:outline-none focus:ring-1 focus:ring-blue-500 opacity-50 cursor-not-allowed"
                             />
                         </div>
                     </div>
@@ -172,11 +176,8 @@ function renderFinderMode() {
                 <!-- Right Panel: Tree View / Viewer View -->
                 <div class="${bgClass} flex flex-col" style="overflow: hidden;">
                     <!-- View Toggle Header -->
-                    <div class="flex justify-between items-center px-3 py-1 border-b ${borderClass}" style="flex-shrink: 0; background: ${state.darkMode ? '#1f2937' : '#f9fafb'};">
-                        <h2 class="text-base font-semibold ${textClass} flex items-center gap-1.5">
-                            <span>View</span>
-                        </h2>
-                        <div class="flex gap-1.5">
+                    <div class="flex items-center px-3 py-1 border-b ${borderClass}" style="flex-shrink: 0; background: ${state.darkMode ? '#1f2937' : '#f9fafb'};">
+                        <div class="flex items-center gap-1.5 flex-1">
                             <button 
                                 onclick="jsonFinderState.viewMode = 'treePath'; render(); setTimeout(() => updateJsonFinderTree(), 50);"
                                 class="px-2.5 py-1 rounded text-xs font-medium transition-all flex items-center gap-1 ${jsonFinderState.viewMode === 'treePath' ? 'bg-blue-500 text-white' : 'bg-gray-300 text-gray-700 hover:bg-gray-400'}"
@@ -192,18 +193,24 @@ function renderFinderMode() {
                                 <span>Tree Viewer</span>
                             </button>
                         </div>
+                        <div class="flex items-center justify-center flex-1">
+                            <h2 class="text-base font-semibold ${textClass} flex items-center gap-1.5">
+                                <span>JSON Viewer</span>
+                            </h2>
+                        </div>
+                        <div class="flex-1"></div>
                     </div>
                     
                     ${jsonFinderState.viewMode === 'treePath' ? `
                         <!-- Search Bar for Tree View (Non-functional) -->
-                        <div class="px-2 py-1 border-b ${borderClass}" style="flex-shrink: 0; background: ${state.darkMode ? '#1f2937' : '#f9fafb'};">
+                        <div class="px-2 py-1.5 border-b ${borderClass}" style="flex-shrink: 0; background: ${state.darkMode ? '#1f2937' : '#f9fafb'};">
                             <div class="flex items-center gap-1.5">
                                     <input 
                                         type="text" 
                                     id="json-finder-search-right" 
                                     placeholder="Search in tree..." 
                                     disabled
-                                    class="flex-1 px-2 py-1 text-xs rounded border ${state.darkMode ? 'bg-gray-900 text-gray-100 border-gray-600' : 'bg-white text-gray-900 border-gray-300'} focus:outline-none focus:ring-1 focus:ring-blue-500 opacity-50 cursor-not-allowed"
+                                    class="flex-1 px-2 py-1.5 text-xs rounded border ${state.darkMode ? 'bg-gray-900 text-gray-100 border-gray-600' : 'bg-white text-gray-900 border-gray-300'} focus:outline-none focus:ring-1 focus:ring-blue-500 opacity-50 cursor-not-allowed"
                                 />
                             </div>
                         </div>
@@ -254,14 +261,14 @@ function renderFinderMode() {
                         </div>
                     ` : `
                         <!-- Search Bar for Tree Viewer (Non-functional) -->
-                        <div class="px-2 py-1 border-b ${borderClass}" style="flex-shrink: 0; background: ${state.darkMode ? '#1f2937' : '#f9fafb'};">
+                        <div class="px-2 py-1.5 border-b ${borderClass}" style="flex-shrink: 0; background: ${state.darkMode ? '#1f2937' : '#f9fafb'};">
                             <div class="flex items-center gap-1.5">
                                 <input 
                                     type="text" 
                                     id="json-finder-search-tree-viewer" 
                                     placeholder="Search in Tree Viewer..." 
                                     disabled
-                                    class="flex-1 px-2 py-1 text-xs rounded border ${state.darkMode ? 'bg-gray-900 text-gray-100 border-gray-600' : 'bg-white text-gray-900 border-gray-300'} focus:outline-none focus:ring-1 focus:ring-blue-500 opacity-50 cursor-not-allowed"
+                                    class="flex-1 px-2 py-1.5 text-xs rounded border ${state.darkMode ? 'bg-gray-900 text-gray-100 border-gray-600' : 'bg-white text-gray-900 border-gray-300'} focus:outline-none focus:ring-1 focus:ring-blue-500 opacity-50 cursor-not-allowed"
                                 />
                             </div>
                         </div>

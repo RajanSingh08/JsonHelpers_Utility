@@ -105,19 +105,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function validateJSON(jsonStr, panel) {
     const panelKey = typeof panel === 'number' ? (panel === 1 ? 'json1' : 'json2') : panel;
+    const root = document.getElementById('root');
+    if (!root) return;
+    
     if (!jsonStr || !jsonStr.trim()) {
         state.errors[panelKey] = null;
-        if (document.getElementById('root')) render();
-        return true;
+        render();
+        return;
     }
+    
     try {
         JSON.parse(jsonStr);
         state.errors[panelKey] = null;
-        if (document.getElementById('root')) render();
     } catch (parseError) {
         state.errors[panelKey] = `Invalid JSON: ${parseError.message}`;
-        if (document.getElementById('root')) render();
     }
+    
+    render();
+    
     try {
         const response = await fetch(`${API_BASE}/api/validate`, {
             method: 'POST',
@@ -125,9 +130,10 @@ async function validateJSON(jsonStr, panel) {
             body: JSON.stringify({ json: jsonStr })
         });
         const data = await response.json();
-        if (state.errors[panelKey] !== (data.valid ? null : data.error)) {
-            state.errors[panelKey] = data.valid ? null : data.error;
-            if (document.getElementById('root')) render();
+        const newError = data.valid ? null : data.error;
+        if (state.errors[panelKey] !== newError) {
+            state.errors[panelKey] = newError;
+            render();
         }
     } catch (error) {
         // Ignore network errors if client-side parse succeeded
