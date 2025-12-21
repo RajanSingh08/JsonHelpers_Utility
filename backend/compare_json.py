@@ -5,7 +5,6 @@ Handles: diff operations
 from flask import Blueprint, request, jsonify
 from deepdiff import DeepDiff
 import json
-from typing import Any, Dict
 
 compare_json_bp = Blueprint('compare_json', __name__)
 

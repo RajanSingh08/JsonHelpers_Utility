@@ -93,10 +93,24 @@ function render() {
         </div>
     `;
         
-        // After rendering finder mode, update the tree if needed
-        if (state.currentMode === 'finder' && typeof updateJsonFinderTree !== 'undefined') {
-            setTimeout(async () => {
-                await updateJsonFinderTree();
+        // After rendering finder mode, update the views based on current mode
+        if (state.currentMode === 'finder') {
+            setTimeout(() => {
+                if (typeof jsonFinderState !== 'undefined') {
+                    // Update colored preview if enabled
+                    if (jsonFinderState.showColored && typeof updateColoredPreview !== 'undefined') {
+                        updateColoredPreview();
+                    }
+                    
+                    // Update right panel based on view mode
+                    if (jsonFinderState.viewMode === 'treeViewer') {
+                        if (typeof updateTreeViewer !== 'undefined') {
+                            updateTreeViewer();
+                        }
+                    } else if (typeof updateJsonFinderTree !== 'undefined') {
+                        updateJsonFinderTree();
+                    }
+                }
             }, 50);
         }
     } catch (error) {
