@@ -50,8 +50,15 @@ function renderFinderMode() {
                       <div class="flex items-center px-3 py-1 border-b ${borderClass}" style="flex-shrink: 0; background: ${state.darkMode ? '#1f2937' : '#f9fafb'};">
                         <div class="flex items-center gap-1.5 flex-1">
                             <button 
+                                onclick="switchToJsonMode()"
+                                class="px-3 py-1 bg-gradient-to-r ${jsonFinderState.showColored ? 'from-gray-500 to-gray-600' : 'from-blue-500 to-blue-600'} text-white rounded text-xs font-medium hover:from-blue-600 hover:to-blue-700 transition-all flex items-center gap-1"
+                                title="Switch to JSON edit mode"
+                            >
+                                <span>JSON</span>
+                            </button>
+                            <button 
                                 onclick="handleJsonFinderFormat()" 
-                                class="px-3 py-1 bg-gradient-to-r from-green-500 to-green-600 text-white rounded text-xs font-medium hover:from-green-600 hover:to-green-700 transition-all flex items-center gap-1"
+                                class="px-3 py-1 bg-gradient-to-r ${jsonFinderState.showColored ? 'from-green-500 to-green-600' : 'from-gray-500 to-gray-600'} text-white rounded text-xs font-medium hover:from-green-600 hover:to-green-700 transition-all flex items-center gap-1"
                                 title="Format/Beautify JSON with color highlighting"
                             >
                                 <span>Beautify</span>
@@ -149,12 +156,20 @@ function renderFinderMode() {
                         <div 
                             id="json-finder-colored-preview" 
                             class="flex-1 overflow-auto ${state.darkMode ? 'bg-gray-900' : 'bg-white'} rounded border ${borderClass}"
-                            style="min-height: 0; overflow-y: auto; overflow-x: auto; padding: 12px; position: relative; cursor: pointer;"
-                            onclick="jsonFinderState.showColored = false; render(); setTimeout(() => { const textarea = document.getElementById('json-finder-input'); if (textarea) { textarea.focus(); textarea.setSelectionRange(0, 0); } }, 50);"
-                            title="Click to edit JSON"
+                            style="min-height: 0; overflow-y: auto; overflow-x: auto; padding: 12px; position: relative;"
                         >
-                            <div style="position: absolute; top: 8px; right: 8px; background: ${state.darkMode ? 'rgba(0, 0, 0, 0.7)' : 'rgba(255, 255, 255, 0.9)'}; padding: 4px 8px; border-radius: 4px; font-size: 11px; color: ${state.darkMode ? '#9ca3af' : '#6b7280'}; pointer-events: none;">
-                                Click to edit
+                            <div style="position: absolute; top: 8px; right: 8px; display: flex; gap: 1.5px; z-index: 10;">
+                                <button 
+                                    onclick="copyJsonInput()" 
+                                    class="px-2.5 py-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded text-xs font-medium hover:from-blue-600 hover:to-blue-700 transition-all flex items-center justify-center shadow-lg"
+                                    style="box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);"
+                                    title="Copy JSON to clipboard"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                    </svg>
+                                </button>
                             </div>
                             ${renderJsonViewer(parsedJson)}
                         </div>
@@ -210,24 +225,16 @@ function renderFinderMode() {
                                     <label class="text-xs font-bold ${state.darkMode ? 'text-indigo-300' : 'text-indigo-700'} whitespace-nowrap flex items-center gap-0.5">
                                         <span>Path:</span>
                                     </label>
-                                    <span id="json-finder-path-display" class="flex-1 text-xs font-mono ${state.darkMode ? 'text-indigo-200' : 'text-indigo-800'}">
+                                    <span id="json-finder-path-display" class="flex-1 font-mono ${state.darkMode ? 'text-indigo-200' : 'text-indigo-800'}" style="font-size: 14px;">
                                         ${jsonFinderState.selectedPath ? convertPathToX(jsonFinderState.selectedPath) : 'Select an item to view its path'}
                                     </span>
                                     <button 
                                         onclick="copyJsonFinderPath()" 
                                         class="px-1.5 py-0.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded text-xs font-medium hover:from-blue-600 hover:to-blue-700 whitespace-nowrap transition-all flex items-center gap-0.5"
-                                        ${!jsonFinderState.selectedPath ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''}
+                                        ${!parsedJson || jsonError ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''}
                                         title="Copy Path"
                                     >
                                         <span>Copy Path</span>
-                                    </button>
-                                    <button 
-                                        onclick="copyJsonFinderValue()" 
-                                        class="px-1.5 py-0.5 bg-gradient-to-r from-green-500 to-green-600 text-white rounded text-xs font-medium hover:from-green-600 hover:to-green-700 whitespace-nowrap transition-all flex items-center gap-0.5"
-                                        ${!jsonFinderState.selectedValue ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''}
-                                        title="Copy Value"
-                                    >
-                                        <span>Copy Value</span>
                                     </button>
                                 </div>
                             </div>
@@ -1218,12 +1225,32 @@ function convertPathFromX(path) {
  * Copy path to clipboard
  */
 async function copyJsonFinderPath() {
-    if (!jsonFinderState.selectedPath) return;
+    // Check if valid JSON exists
+    let hasValidJson = false;
+    try {
+        if (state.json1 && state.json1.trim() && state.json1 !== '{}') {
+            JSON.parse(state.json1);
+            hasValidJson = true;
+        }
+    } catch (e) {
+        hasValidJson = false;
+    }
+    
+    if (!hasValidJson) {
+        alert('Please enter valid JSON first.');
+        return;
+    }
+    
+    if (!jsonFinderState.selectedPath) {
+        alert('No path to copy. Please select an item first.');
+        return;
+    }
     
     try {
         // Copy the x. version (user-friendly)
         const pathToCopy = convertPathToX(jsonFinderState.selectedPath);
         await navigator.clipboard.writeText(pathToCopy);
+        
         // Show feedback
         const pathDisplay = document.getElementById('json-finder-path-display');
         if (pathDisplay) {
@@ -1239,32 +1266,6 @@ async function copyJsonFinderPath() {
     }
 }
 
-/**
- * Copy value to clipboard
- */
-async function copyJsonFinderValue() {
-    if (!jsonFinderState.selectedValue) return;
-    
-    try {
-        // Copy the value as JSON string
-        const valueToCopy = typeof jsonFinderState.selectedValue === 'object' 
-            ? JSON.stringify(jsonFinderState.selectedValue, null, 2)
-            : String(jsonFinderState.selectedValue);
-        await navigator.clipboard.writeText(valueToCopy);
-        // Show feedback
-        const pathDisplay = document.getElementById('json-finder-path-display');
-        if (pathDisplay) {
-            const original = pathDisplay.textContent;
-            pathDisplay.textContent = 'Value Copied!';
-            setTimeout(() => {
-                pathDisplay.textContent = original;
-            }, 1000);
-        }
-    } catch (error) {
-        console.error('Failed to copy value:', error);
-        alert('Failed to copy value to clipboard');
-    }
-}
 
 /**
  * Download JSON input as file
@@ -1552,6 +1553,32 @@ async function shareJsonInput() {
             alert('Failed to create shareable link');
         }
     }
+}
+
+/**
+ * Switch to JSON edit mode and format JSON if it's minified
+ */
+function switchToJsonMode() {
+    jsonFinderState.showColored = false;
+    
+    // Format JSON if it's minified (single line)
+    if (state.json1 && state.json1.trim() && state.json1 !== '{}' && !state.json1.includes('\n')) {
+        try {
+            const parsed = JSON.parse(state.json1);
+            state.json1 = JSON.stringify(parsed, null, 2);
+        } catch (e) {
+            // Invalid JSON, skip formatting
+        }
+    }
+    
+    render();
+    setTimeout(() => {
+        const textarea = document.getElementById('json-finder-input');
+        if (textarea) {
+            textarea.setSelectionRange(0, 0);
+            textarea.focus();
+        }
+    }, 50);
 }
 
 /**
