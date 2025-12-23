@@ -587,10 +587,9 @@ function renderTreeViewer(obj, key, level, path = '') {
             const escapedKey = escapeHtml(String(key));
             html += `<div style="${lineStyle}" onclick="selectTreeViewerValueFromElement(this);" data-path="${escapedPath}" data-value="${valueJson}">
                 <span style="display: inline-block; width: 8px; height: 8px; background-color: ${squareBoxColor}; border: 1px solid ${squareBoxColor}; margin-right: 4px; flex-shrink: 0; border-radius: 2px;"></span>
-                <span style="color: ${keyColor}; font-weight: 500; cursor: pointer;" onclick="event.stopPropagation(); copyTreeViewerKey('${escapedKey.replace(/'/g, "\\'")}', this);">${escapedKey}</span>
+                <span class="tree-viewer-key" style="color: ${keyColor}; font-weight: 500; cursor: pointer;" onclick="event.stopPropagation(); copyTreeViewerKey('${escapedKey.replace(/'/g, "\\'")}', this);">${escapedKey}</span>
                 <span style="color: ${colonColor};">:</span>
-                <span style="${valueStyle}">${valueDisplay}</span>
-                <span style="margin-left: 8px; font-size: 11px; color: #10b981; display: none;" class="copy-icon-tree-viewer" title="Copied!">[Copied!]</span>
+                <span class="tree-viewer-value" style="${valueStyle}">${valueDisplay}</span>
             </div>`;
         }
     }
@@ -616,15 +615,16 @@ function toggleTreeViewer(path) {
 async function copyTreeViewerKey(key, element) {
     try {
         await navigator.clipboard.writeText(key);
-        // Show feedback
-        const feedback = document.createElement('span');
-        feedback.textContent = '✓ Copied!';
-        feedback.style.cssText = 'margin-left: 8px; font-size: 11px; color: #10b981;';
+        // Show feedback inline like Tree Path - replace key text with "Copied!"
         const keySpan = element || window.event?.target;
-        if (keySpan && keySpan.parentNode) {
-            keySpan.parentNode.insertBefore(feedback, keySpan.nextSibling);
+        if (keySpan && keySpan.classList.contains('tree-viewer-key')) {
+            const originalText = keySpan.textContent;
+            const originalColor = keySpan.style.color;
+            keySpan.textContent = 'Copied!';
+            keySpan.style.color = state.darkMode ? '#10b981' : '#059669';
             setTimeout(() => {
-                feedback.remove();
+                keySpan.textContent = originalText;
+                keySpan.style.color = originalColor;
             }, 1000);
         }
     } catch (error) {
@@ -665,16 +665,17 @@ async function selectTreeViewerValue(path, value, clickedElement) {
             : String(value);
         await navigator.clipboard.writeText(valueToCopy);
         
-        // Show feedback on the clicked element
+        // Show feedback inline like Tree Path - replace value text with "Copied!"
         if (clickedElement) {
-            const copyIcon = clickedElement.querySelector('.copy-icon-tree-viewer');
-            if (copyIcon) {
-                // Show the feedback
-                copyIcon.style.display = 'inline';
-                copyIcon.style.color = '#10b981';
-                // Hide after 1 second
+            const valueSpan = clickedElement.querySelector('.tree-viewer-value');
+            if (valueSpan) {
+                const originalText = valueSpan.textContent;
+                const originalColor = valueSpan.style.color;
+                valueSpan.textContent = 'Copied!';
+                valueSpan.style.color = state.darkMode ? '#10b981' : '#059669';
                 setTimeout(() => {
-                    copyIcon.style.display = 'none';
+                    valueSpan.textContent = originalText;
+                    valueSpan.style.color = originalColor;
                 }, 1000);
             }
         }
