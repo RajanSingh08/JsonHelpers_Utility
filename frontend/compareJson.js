@@ -15,10 +15,15 @@ let compareState = {
 function renderCompareMode() {
     const bgClass = state.darkMode ? 'bg-gray-800' : 'bg-white';
     const borderClass = state.darkMode ? 'border-gray-700' : 'border-gray-200';
-    const textClass = state.darkMode ? 'text-gray-100' : 'text-gray-900';
     
     // Determine if results should be shown
     const hasResults = compareState.diffResult || compareState.error || compareState.comparing;
+    
+    // Check if JSONs are empty
+    const json1Empty = !state.json1 || !state.json1.trim() || state.json1 === '{}';
+    const json2Empty = !state.json2 || !state.json2.trim() || state.json2 === '{}';
+    const bothEmpty = json1Empty && json2Empty;
+    const oneEmpty = (json1Empty && !json2Empty) || (!json1Empty && json2Empty);
     
     return `
         <div class="flex flex-col">
@@ -28,7 +33,7 @@ function renderCompareMode() {
                 <div class="${bgClass} flex flex-col" style="overflow: hidden; border-right: 1px solid ${state.darkMode ? '#374151' : '#e5e7eb'};">
                     <!-- Header -->
                     <div class="flex items-center justify-center px-3 py-2 border-b ${borderClass}" style="flex-shrink: 0; background: ${state.darkMode ? 'linear-gradient(to right, #1f2937, #111827)' : 'linear-gradient(to right, #f9fafb, #f3f4f6)'};">
-                        <h2 class="text-base font-semibold ${textClass} tracking-wide">JSON 1</h2>
+                        <h2 class="text-base font-semibold tracking-wide" style="color: ${state.darkMode ? '#f1f5f9' : '#0f172a'};">JSON 1</h2>
                     </div>
                     <!-- Textarea Container with Line Numbers -->
                     <div class="compare-textarea-wrapper" style="flex: 1; min-height: 0; overflow: hidden;">
@@ -52,7 +57,7 @@ function renderCompareMode() {
                 <div class="${bgClass} flex flex-col" style="overflow: hidden;">
                     <!-- Header -->
                     <div class="flex items-center justify-center px-3 py-2 border-b ${borderClass}" style="flex-shrink: 0; background: ${state.darkMode ? 'linear-gradient(to right, #1f2937, #111827)' : 'linear-gradient(to right, #f9fafb, #f3f4f6)'};">
-                        <h2 class="text-base font-semibold ${textClass} tracking-wide">JSON 2</h2>
+                        <h2 class="text-base font-semibold tracking-wide" style="color: ${state.darkMode ? '#f1f5f9' : '#0f172a'};">JSON 2</h2>
                     </div>
                     <!-- Textarea Container with Line Numbers -->
                     <div class="compare-textarea-wrapper" style="flex: 1; min-height: 0; overflow: hidden;">
@@ -85,8 +90,29 @@ function renderCompareMode() {
                 </button>
             </div>
             
+            <!-- Empty JSON Messages -->
+            ${bothEmpty && !hasResults ? `
+            <div class="border-t ${borderClass}" style="flex-shrink: 0;">
+                <div class="px-2 py-2 flex items-center justify-center">
+                    <div class="p-2 ${state.darkMode ? 'bg-red-900 border-red-700 text-red-200' : 'bg-red-100 border-red-400 text-red-700'} border rounded text-sm">
+                        Please put your JSON in input
+                    </div>
+                </div>
+            </div>
+            ` : ''}
+            
+            ${oneEmpty && !hasResults ? `
+            <div class="border-t ${borderClass}" style="flex-shrink: 0;">
+                <div class="px-2 py-2 flex items-center justify-center">
+                    <div class="p-2 ${state.darkMode ? 'bg-red-900 border-red-700 text-red-200' : 'bg-red-100 border-red-400 text-red-700'} border rounded text-sm">
+                        ${json1Empty ? 'Please put JSON to JSON 1' : 'Please put JSON to JSON 2'}
+                    </div>
+                </div>
+            </div>
+            ` : ''}
+            
             <!-- Identical Message Banner (shown when identical - replaces results section) -->
-            ${compareState.diffResult && compareState.diffResult.isIdentical && !compareState.comparing ? `
+            ${compareState.diffResult && compareState.diffResult.isIdentical && !compareState.comparing && !bothEmpty && !json1Empty && !json2Empty ? `
             <div class="border-t ${borderClass}" style="flex-shrink: 0; background: ${state.darkMode ? '#065f46' : '#d1fae5'};">
                 <div class="px-2 py-1 flex items-center justify-center gap-1">
                     <p class="text-sm font-semibold ${state.darkMode ? 'text-green-200' : 'text-green-800'}">
@@ -106,9 +132,8 @@ function renderCompareMode() {
     `;
 }
 
-// escapeHtml is defined in jsonFinder.js (loaded first) and available globally
-
 // Update line numbers for a textarea
+// Note: escapeHtml is defined in jsonFinder.js (loaded first) and available globally
 function updateLineNumbers(textareaId, lineNumbersId) {
     const textarea = document.getElementById(textareaId);
     const lineNumbersDiv = document.getElementById(lineNumbersId);
@@ -213,6 +238,7 @@ function findLineNumberInJson(jsonStr, searchValue, searchKey = null) {
 function clearComparisonResults() {
     compareState.diffResult = null;
     compareState.error = null;
+    compareState.comparing = false;
     compareState.diffLinesJson1.clear();
     compareState.diffLinesJson2.clear();
 }
@@ -518,6 +544,18 @@ async function compareJson() {
         return;
     }
     
+    // Check if both JSONs have actual content (not just empty objects or whitespace)
+    const json1HasContent = state.json1 && state.json1.trim() && state.json1.trim() !== '{}';
+    const json2HasContent = state.json2 && state.json2.trim() && state.json2.trim() !== '{}';
+    
+    if (!json1HasContent || !json2HasContent) {
+        compareState.error = 'Both JSON inputs are required.';
+        compareState.diffResult = null;
+        compareState.comparing = false;
+        render();
+        return;
+    }
+    
     // Check if semantically identical first
     const isSemanticallyIdentical = areJsonSemanticallyIdentical(state.json1, state.json2);
     
@@ -648,7 +686,7 @@ function renderCompareResults() {
                       (summary.array_removed && Object.keys(summary.array_removed).length > 0);
     
     if (!hasChanges) {
-        return `
+    return `
             <div class="${state.darkMode ? 'bg-green-900' : 'bg-green-100'} rounded border ${state.darkMode ? 'border-green-700' : 'border-green-400'} p-2">
                 <div class="flex items-center gap-1 mb-1">
                     <svg class="w-4 h-4 ${state.darkMode ? 'text-green-300' : 'text-green-700'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -660,10 +698,6 @@ function renderCompareResults() {
             </div>
         `;
     }
-    
-    const bgClass = state.darkMode ? 'bg-gray-800' : 'bg-white';
-    const borderClass = state.darkMode ? 'border-gray-700' : 'border-gray-200';
-    const textClass = state.darkMode ? 'text-gray-100' : 'text-gray-900';
     
     // Calculate statistics from detailed differences
     const stats = {
@@ -678,11 +712,11 @@ function renderCompareResults() {
     const totalChanges = detailedDiffs.length || (stats.added + stats.removed + stats.changed);
     
     let resultsHtml = `
-        <div class="p-1 ${bgClass}" style="min-height: 20vh;">
+        <div class="p-1" style="min-height: 20vh; background-color: ${state.darkMode ? '#1e293b' : '#f8fafc'};">
             <div class="flex items-center mb-1 flex-wrap gap-1">
                 <div class="flex-1"></div>
                 <div class="flex-1 text-center">
-                    <h3 class="text-sm font-semibold ${textClass}">Detailed Comparison Results</h3>
+                    <h3 class="text-sm font-semibold" style="color: ${state.darkMode ? '#f1f5f9' : '#0f172a'};">Detailed Comparison Results</h3>
                 </div>
                 <div class="flex-1 flex items-center justify-end gap-1 text-xs flex-wrap">
                     ${stats.typeMismatches > 0 ? `<span class="${state.darkMode ? 'text-gray-400' : 'text-gray-600'}">
@@ -722,7 +756,7 @@ function renderCompareResults() {
     if (missingKeysJson1.length > 0 || missingKeysJson2.length > 0) {
         resultsHtml += `
             <div class="mb-1">
-                <h4 class="text-xs font-semibold ${textClass} mb-0.5">Missing Keys</h4>
+                <h4 class="text-xs font-semibold mb-0.5" style="color: ${state.darkMode ? '#f1f5f9' : '#0f172a'};">Missing Keys</h4>
                 <div class="grid grid-cols-2 gap-1">
                     <!-- JSON 1 Missing Keys -->
                     <div class="${state.darkMode ? 'bg-gray-900' : 'bg-gray-50'} rounded p-1 border ${state.darkMode ? 'border-gray-700' : 'border-gray-200'}">
@@ -768,7 +802,7 @@ function renderCompareResults() {
     if (valueMismatches.length > 0) {
         resultsHtml += `
             <div class="mb-1">
-                <h4 class="text-xs font-semibold ${textClass} mb-0.5">Value Mismatches</h4>
+                <h4 class="text-xs font-semibold mb-0.5" style="color: ${state.darkMode ? '#f1f5f9' : '#0f172a'};">Value Mismatches</h4>
                 <div class="grid grid-cols-2 gap-1">
                     <!-- JSON 1 Value Mismatches -->
                     <div class="${state.darkMode ? 'bg-gray-900' : 'bg-gray-50'} rounded p-1 border ${state.darkMode ? 'border-gray-700' : 'border-gray-200'}">
@@ -931,7 +965,7 @@ function renderCompareResults() {
             for (const [path, change] of Object.entries(summary.changed)) {
                 resultsHtml += `
                     <div class="mb-1 pb-1 border-b ${state.darkMode ? 'border-gray-700' : 'border-gray-200'}">
-                        <div class="font-semibold mb-0.5 ${textClass}">${escapeHtml(path)}</div>
+                        <div class="font-semibold mb-0.5" style="color: ${state.darkMode ? '#f1f5f9' : '#0f172a'};">${escapeHtml(path)}</div>
                         <div class="ml-2">
                             <div class="mb-0.5 ${state.darkMode ? 'text-red-300' : 'text-red-600'}">- Old: ${escapeHtml(String(change.old_value))}</div>
                             <div class="${state.darkMode ? 'text-green-300' : 'text-green-600'}">+ New: ${escapeHtml(String(change.new_value))}</div>

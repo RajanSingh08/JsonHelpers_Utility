@@ -192,7 +192,7 @@ function render() {
                     <div class="flex items-center gap-2">
                         <h1 class="text-xl font-bold ${state.darkMode ? 'text-white' : 'text-gray-900'}">🔧 JSON Helper</h1>
                         <span class="text-xs ${state.darkMode ? 'text-gray-400' : 'text-gray-600'} font-medium">powered by</span>
-                        <span class="text-sm font-semibold ${state.darkMode ? 'text-blue-400' : 'text-blue-600'}">ratl.ai</span>
+                        <a href="https://www.ratl.ai/" target="_blank" rel="noopener noreferrer" class="text-sm font-semibold ${state.darkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'} transition-colors">ratl.ai</a>
                     </div>
                     <div class="flex gap-2 items-center">
                         <button onclick="state.currentMode = 'finder'; render();" class="px-3 py-1.5 rounded-md text-xs font-medium transition-all ${state.currentMode === 'finder' ? 'bg-blue-600 text-white shadow-md' : state.darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}">JSON Finder</button>
