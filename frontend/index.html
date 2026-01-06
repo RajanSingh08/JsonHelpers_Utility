@@ -3,9 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JSON Helper - All-in-One JSON Tool</title>
+    <title>JSON Helper powered by ratl.ai - All-in-One JSON Tool</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        /* Ratl.ai Brand Colors */
+        :root {
+            --ratl-primary: #2563eb;
+            --ratl-primary-dark: #1e40af;
+            --ratl-accent: #3b82f6;
+        }
+        
         /* JSON Tree View Styles */
         .json-tree-node {
             font-family: 'SF Mono', 'Monaco', 'Menlo', 'Consolas', 'Courier New', monospace;
@@ -40,7 +47,7 @@
             overflow-wrap: break-word;
         }
         /* JSON Input Textarea - Horizontal Scrolling */
-        #json-finder-input {
+        #json-finder-input, #compare-textarea1, #compare-textarea2 {
             white-space: pre !important;
             overflow-x: auto !important;
             overflow-y: auto !important;
@@ -50,18 +57,18 @@
             line-height: 1.7 !important;
             font-family: 'SF Mono', 'Monaco', 'Menlo', 'Consolas', 'Courier New', monospace !important;
         }
-        #json-finder-input::-webkit-scrollbar {
+        #json-finder-input::-webkit-scrollbar, #compare-textarea1::-webkit-scrollbar, #compare-textarea2::-webkit-scrollbar {
             height: 8px;
             width: 8px;
         }
-        #json-finder-input::-webkit-scrollbar-track {
+        #json-finder-input::-webkit-scrollbar-track, #compare-textarea1::-webkit-scrollbar-track, #compare-textarea2::-webkit-scrollbar-track {
             background: transparent;
         }
-        #json-finder-input::-webkit-scrollbar-thumb {
+        #json-finder-input::-webkit-scrollbar-thumb, #compare-textarea1::-webkit-scrollbar-thumb, #compare-textarea2::-webkit-scrollbar-thumb {
             background: rgba(156, 163, 175, 0.5);
             border-radius: 4px;
         }
-        #json-finder-input::-webkit-scrollbar-thumb:hover {
+        #json-finder-input::-webkit-scrollbar-thumb:hover, #compare-textarea1::-webkit-scrollbar-thumb:hover, #compare-textarea2::-webkit-scrollbar-thumb:hover {
             background: rgba(156, 163, 175, 0.7);
         }
         #json-finder-colored-preview {
@@ -82,6 +89,39 @@
         }
         .json-key-clickable {
             cursor: pointer;
+        }
+        /* Line numbers for compare textareas */
+        .compare-textarea-wrapper {
+            display: flex;
+            position: relative;
+            height: 100%;
+        }
+        .compare-line-numbers {
+            padding: 12px 8px 12px 12px;
+            font-family: 'SF Mono', 'Monaco', 'Menlo', 'Consolas', 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.7;
+            text-align: right;
+            user-select: none;
+            white-space: pre;
+            overflow: hidden;
+            flex-shrink: 0;
+            min-width: 40px;
+        }
+        .compare-line-numbers .diff-line-number {
+            display: inline-block;
+            background-color: #fef3c7;
+            color: #92400e;
+            padding: 0 4px;
+            border-radius: 2px;
+            font-weight: 600;
+        }
+        .compare-textarea-with-lines {
+            flex: 1;
+            padding-left: 0;
+        }
+        .compare-textarea-with-lines textarea {
+            padding-left: 8px !important;
         }
     </style>
 </head>
