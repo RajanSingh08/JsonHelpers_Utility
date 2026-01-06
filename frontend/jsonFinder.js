@@ -132,19 +132,6 @@ function renderFinderMode() {
                         </div>
                     </div>
                     
-                    <!-- Search Bar for Left Panel (Non-functional) -->
-                    <!--<div class="px-2 py-1.5 border-b ${borderClass}" style="flex-shrink: 0; background: ${state.darkMode ? '#1f2937' : '#f9fafb'};">
-                        <div class="flex items-center gap-1.5">
-                            <input 
-                                type="text" 
-                                id="json-finder-search-left" 
-                                placeholder="Search in JSON..." 
-                                disabled
-                                class="flex-1 px-2 py-1.5 text-xs rounded border ${state.darkMode ? 'bg-gray-900 text-gray-100 border-gray-600' : 'bg-white text-gray-900 border-gray-300'} focus:outline-none focus:ring-1 focus:ring-blue-500 opacity-50 cursor-not-allowed"
-                            />
-                        </div>
-                    </div> -->
-                    
                     <div class="px-2 pt-0 pb-2 flex flex-col" style="flex: 1; min-height: 0;">
                     ${jsonError ? `
                             <div class="mb-1 p-2 bg-red-50 border-l-4 border-red-500 text-red-700 rounded text-xs flex items-center gap-1.5" style="flex-shrink: 0;">

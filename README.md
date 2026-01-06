@@ -8,28 +8,51 @@ A full-stack web application that combines the best features of jsonpathfinder.c
 
 **Opening `index.html` directly (file://) will NOT work** due to CORS restrictions. You must run a local server.
 
-### Option 1: Run Both Servers Separately (Recommended)
+### Option 1: Unified Startup Script (Recommended)
 
-**Terminal 1 - Start Backend:**
+**Start both servers:**
 ```bash
-./start-backend.sh
+./start.sh
 ```
-Backend will run on `http://localhost:5000`
+This will automatically open two terminal windows (on macOS/Linux) for backend and frontend.
 
-**Terminal 2 - Start Frontend:**
+**Or start individually:**
 ```bash
-./start-frontend.sh
+# Terminal 1 - Backend
+./start.sh backend
+
+# Terminal 2 - Frontend  
+./start.sh frontend
 ```
-Frontend will run on `http://localhost:8000`
+
+**Other commands:**
+```bash
+./start.sh status   # Check server status
+./start.sh stop     # Stop all servers
+```
+
+Backend runs on `http://localhost:5000`  
+Frontend runs on `http://localhost:8000`
 
 **Then open `http://localhost:8000` in your browser** (NOT file://)
 
-### Why not file://?
-- Browser CORS restrictions prevent API calls from `file://` to `http://localhost:5000`
-- Running via `http://localhost:8000` allows proper API communication
-- The app will show a warning if you try to use `file://`
+### Option 2: Docker (Easiest)
 
-### Option 2: Manual Start
+**First, install Docker Desktop:**
+- Download from: https://www.docker.com/products/docker-desktop/
+- Or via Homebrew: `brew install --cask docker`
+- Start Docker Desktop application after installation
+
+**Then run:**
+```bash
+docker compose up
+```
+
+This starts both servers in containers. Open `http://localhost:8000` in your browser.
+
+**Note:** Modern Docker uses `docker compose` (subcommand) instead of `docker-compose` (legacy).
+
+### Option 3: Manual Start
 
 **Start Backend:**
 ```bash
@@ -41,15 +64,13 @@ FLASK_APP=app.py flask run --host=0.0.0.0 --port=5000
 **Start Frontend (in another terminal):**
 ```bash
 cd frontend
-python3 -m http.server 8000
+python3 server.py
 ```
 
-### Option 3: Auto Start (macOS)
-
-```bash
-./run.sh
-```
-This will automatically open two terminal windows for backend and frontend.
+### Why not file://?
+- Browser CORS restrictions prevent API calls from `file://` to `http://localhost:5000`
+- Running via `http://localhost:8000` allows proper API communication
+- The app will show a warning if you try to use `file://`
 
 ## ✨ Features
 
@@ -107,29 +128,112 @@ JsonHelper/
 │   ├── index.html          # Main HTML file
 │   ├── app.js              # Main application logic
 │   ├── jsonFinder.js       # JSON finder frontend
-│   └── compareJson.js      # JSON comparison frontend
-├── run.sh                  # Quick start script
-└── README.md
+│   ├── compareJson.js      # JSON comparison frontend
+│   └── server.py           # Frontend HTTP server
+├── start.sh                # Unified startup script
+├── Dockerfile              # Docker configuration
+├── docker-compose.yml      # Docker Compose configuration
+└── README.md               # This file
 ```
 
 ## 🎯 API Endpoints
 
 - `POST /api/validate` - Validate JSON and return errors
 - `POST /api/format` - Format/beautify JSON
-- `POST /diff` - Compare two JSONs and return differences
-- `POST /api/search` - Search for keys, values, or paths
+- `POST /api/compare/diff` - Compare two JSONs and return differences
 - `POST /api/value` - Get value at a specific path
 
 ## 💡 Usage Guide
 
-1. **Start the backend**: `cd backend && flask run`
-2. **Open frontend**: Open `frontend/index.html` in browser
+1. **Start the backend**: `./start.sh backend` or `docker-compose up`
+2. **Open frontend**: Open `http://localhost:8000` in browser
 3. **Paste JSON**: Paste your JSON in the left panel
 4. **View Tree**: Click "Tree" to see expandable JSON structure
 5. **Select Path**: Click any node to see its path
 6. **Search**: Use search bar to find keys/values
 7. **Compare**: Enable Compare Mode to compare two JSONs
 8. **Format**: Click "Format JSON" to beautify
+
+## 🐳 Docker Deployment
+
+### Prerequisites
+
+**Install Docker Desktop:**
+1. Download from: https://www.docker.com/products/docker-desktop/
+2. Or via Homebrew: `brew install --cask docker`
+3. Start Docker Desktop application (wait for it to fully start)
+
+### Using Docker Compose (Recommended)
+
+```bash
+docker compose up
+```
+
+**Note:** Modern Docker uses `docker compose` (subcommand). If you have an older version, you might need `docker-compose` (with hyphen) instead.
+
+### Using Docker directly
+
+```bash
+# Build the image
+docker build -t json-helper .
+
+# Run the container
+docker run -p 5000:5000 -p 8000:8000 json-helper
+```
+
+The application will be available at `http://localhost:8000`
+
+## 🏗️ How It Works
+
+### Architecture
+
+```
+┌─────────────────┐         ┌─────────────────┐
+│   Browser       │         │   Backend       │
+│                 │         │   (Flask)       │
+│  http://        │────────▶│  localhost:5000 │
+│  localhost:8000 │  API    │                 │
+│                 │  Calls  │  /api/validate  │
+│  index.html     │         │  /api/format    │
+│  app.js         │         │  /api/value     │
+│  jsonFinder.js  │         │  /api/compare/diff │
+│  compareJson.js │         │                 │
+└─────────────────┘         └─────────────────┘
+      ▲
+      │
+      │ Served by
+      │
+┌─────────────────┐
+│  Frontend       │
+│  Server         │
+│  (Python HTTP)  │
+│  localhost:8000 │
+└─────────────────┘
+```
+
+### Why Two Servers?
+
+1. **Backend Server (Flask)**: Handles API requests, JSON processing, validation, formatting
+2. **Frontend Server (Python HTTP)**: Serves static files (HTML, CSS, JS) so they're loaded via HTTP protocol
+
+### File Protocol vs HTTP Protocol
+
+**File Protocol (file://) - ❌ Won't Work Properly**
+
+When you open `file:///path/to/index.html` directly:
+- Browser loads the HTML file from your local filesystem
+- JavaScript tries to make API calls to `http://localhost:5000`
+- Browser blocks the requests due to CORS restrictions
+- Result: The app loads but API features won't work
+
+**HTTP Server (http://localhost:8000) - ✅ Works Correctly**
+
+When you run the frontend server and open `http://localhost:8000`:
+- Python HTTP server serves files from the `frontend/` directory
+- Browser loads the HTML via HTTP protocol
+- JavaScript makes API calls to `http://localhost:5000`
+- CORS allows the requests because both are on `localhost`
+- Result: Everything works perfectly!
 
 ## 🎨 UI Features
 
@@ -160,5 +264,43 @@ JsonHelper/
 - Backend: Flask with REST API
 - Frontend: Pure JavaScript (no build step needed)
 - Just edit files and refresh browser!
+
+## 🐛 Troubleshooting
+
+### Backend not starting?
+- Make sure Python 3 is installed: `python3 --version`
+- Install dependencies: `pip3 install -r backend/requirements.txt`
+- Check if port 5000 is available: `./start.sh status`
+- Try: `./start.sh stop` then `./start.sh backend`
+
+### Frontend not starting?
+- Make sure Python 3 is installed
+- Check if port 8000 is available: `./start.sh status`
+- The script will automatically try port 8080 if 8000 is taken
+- Try: `./start.sh stop` then `./start.sh frontend`
+
+### CORS errors?
+- Make sure you're using `http://localhost:8000`, not `file://`
+- Make sure backend is running on port 5000
+- Check browser console for errors
+- Verify `API_BASE` in `frontend/app.js` is set to `http://localhost:5000`
+
+### Port already in use?
+- Use `./start.sh stop` to stop all servers
+- Or manually: `lsof -ti:5000 | xargs kill` and `lsof -ti:8000 | xargs kill`
+
+### Connection refused?
+- Backend server is not running
+- Start it with `./start.sh backend` or `./start.sh`
+
+## 🛑 Stopping Servers
+
+**Using the script:**
+```bash
+./start.sh stop
+```
+
+**Manually:**
+Press `Ctrl+C` in each terminal where servers are running.
 
 Enjoy! 🎉

@@ -5,6 +5,7 @@ Handles: diff operations with detailed key-value and schema comparison
 from flask import Blueprint, request, jsonify
 from deepdiff import DeepDiff
 import json
+import re
 from typing import Any, Dict, List
 
 compare_json_bp = Blueprint('compare_json', __name__, url_prefix='/api/compare')
@@ -34,7 +35,6 @@ def find_line_number_in_json(json_str: str, search_value: Any = None, search_key
         
         # If we have a key, search for it first
         if search_key:
-            import re
             key_pattern = re.compile(rf'["\']{re.escape(search_key)}["\']\s*:', re.IGNORECASE)
             for i, line in enumerate(lines):
                 if key_pattern.search(line):
