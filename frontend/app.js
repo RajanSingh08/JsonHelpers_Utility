@@ -103,21 +103,53 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+// Update error display without full render
+function updateErrorDisplay(panelKey) {
+    if (state.currentMode !== 'compare') return;
+    
+    const panel = panelKey === 'json1' ? 1 : 2;
+    const textarea = document.getElementById(`compare-textarea${panel}`);
+    if (!textarea) return;
+    
+    const panelContainer = textarea.closest('.flex.flex-col');
+    if (!panelContainer) return;
+    
+    // Find error container
+    let errorContainer = panelContainer.querySelector('.error-container');
+    if (!errorContainer) return;
+    
+    const borderClass = state.darkMode ? 'border-gray-700' : 'border-gray-200';
+    
+    if (state.errors[panelKey]) {
+        errorContainer.innerHTML = `<div class="px-2 py-1 border-t ${borderClass}" style="flex-shrink: 0;"><div class="p-1 ${state.darkMode ? 'bg-red-900 border-red-700 text-red-200' : 'bg-red-100 border-red-400 text-red-700'} border rounded text-xs">${escapeHtml(state.errors[panelKey])}</div></div>`;
+        errorContainer.style.display = 'block';
+    } else {
+        errorContainer.innerHTML = '';
+        errorContainer.style.display = 'none';
+    }
+}
+
 async function validateJSON(jsonStr, panel) {
     const panelKey = typeof panel === 'number' ? (panel === 1 ? 'json1' : 'json2') : panel;
+    const root = document.getElementById('root');
+    if (!root) return;
+    
     if (!jsonStr || !jsonStr.trim()) {
         state.errors[panelKey] = null;
-        if (document.getElementById('root')) render();
-        return true;
+        updateErrorDisplay(panelKey);
+        return;
     }
+    
     try {
         JSON.parse(jsonStr);
         state.errors[panelKey] = null;
-        if (document.getElementById('root')) render();
+        updateErrorDisplay(panelKey);
     } catch (parseError) {
         state.errors[panelKey] = `Invalid JSON: ${parseError.message}`;
-        if (document.getElementById('root')) render();
+        updateErrorDisplay(panelKey);
     }
+    
+    // Async validation with backend (non-blocking)
     try {
         const response = await fetch(`${API_BASE}/api/validate`, {
             method: 'POST',
@@ -125,9 +157,10 @@ async function validateJSON(jsonStr, panel) {
             body: JSON.stringify({ json: jsonStr })
         });
         const data = await response.json();
-        if (state.errors[panelKey] !== (data.valid ? null : data.error)) {
-            state.errors[panelKey] = data.valid ? null : data.error;
-            if (document.getElementById('root')) render();
+        const newError = data.valid ? null : data.error;
+        if (state.errors[panelKey] !== newError) {
+            state.errors[panelKey] = newError;
+            updateErrorDisplay(panelKey);
         }
     } catch (error) {
         // Ignore network errors if client-side parse succeeded
@@ -154,13 +187,17 @@ function render() {
         
         root.innerHTML = `
         <div class="min-h-screen ${bgClass} ${textClass}" style="min-height: 100vh; margin: 0; padding: 0;">
-            <header class="${state.darkMode ? 'bg-gray-800' : 'bg-white'} border-b ${state.darkMode ? 'border-gray-700' : 'border-gray-200'} px-3 py-2">
+            <header class="${state.darkMode ? 'bg-gradient-to-r from-gray-800 to-gray-900' : 'bg-gradient-to-r from-white to-gray-50'} border-b ${state.darkMode ? 'border-gray-700' : 'border-gray-200'} px-4 py-3 shadow-sm">
                 <div class="flex justify-between items-center">
-                    <h1 class="text-lg font-bold">🔧 JSON Helper</h1>
-                    <div class="flex gap-1.5 items-center">
-                        <button onclick="state.currentMode = 'finder'; render();" class="px-2.5 py-1 rounded text-xs ${state.currentMode === 'finder' ? 'bg-blue-500 text-white' : 'bg-gray-300 text-gray-700'}">JSON Finder</button>
-                        <button onclick="state.currentMode = 'compare'; render();" class="px-2.5 py-1 rounded text-xs ${state.currentMode === 'compare' ? 'bg-blue-500 text-white' : 'bg-gray-300 text-gray-700'}">Compare Jsons</button>
-                        <button onclick="state.darkMode = !state.darkMode; render();" class="px-2.5 py-1 rounded text-xs ${state.darkMode ? 'bg-gray-700 text-white' : 'bg-gray-200 text-gray-800'}">${state.darkMode ? '☀️ Bright' : '🌙 Dark'}</button>
+                    <div class="flex items-center gap-2">
+                        <h1 class="text-xl font-bold ${state.darkMode ? 'text-white' : 'text-gray-900'}">🔧 JSON Helper</h1>
+                        <span class="text-xs ${state.darkMode ? 'text-gray-400' : 'text-gray-600'} font-medium">powered by</span>
+                        <a href="https://www.ratl.ai/" target="_blank" rel="noopener noreferrer" class="text-sm font-semibold ${state.darkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'} transition-colors">ratl.ai</a>
+                    </div>
+                    <div class="flex gap-2 items-center">
+                        <button onclick="state.currentMode = 'finder'; render();" class="px-3 py-1.5 rounded-md text-xs font-medium transition-all ${state.currentMode === 'finder' ? 'bg-blue-600 text-white shadow-md' : state.darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}">JSON Finder</button>
+                        <button onclick="state.currentMode = 'compare'; render();" class="px-3 py-1.5 rounded-md text-xs font-medium transition-all ${state.currentMode === 'compare' ? 'bg-blue-600 text-white shadow-md' : state.darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}">Compare Jsons</button>
+                        <button onclick="state.darkMode = !state.darkMode; render();" class="px-3 py-1.5 rounded-md text-xs font-medium transition-all ${state.darkMode ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}">${state.darkMode ? '☀️ Bright' : '🌙 Dark'}</button>
                     </div>
                 </div>
             </header>
@@ -189,6 +226,24 @@ function render() {
                     }
                 }
             }, 50);
+        } else if (state.currentMode === 'compare') {
+            // After rendering compare mode, ensure textarea values are set correctly and initialize line numbers
+            setTimeout(() => {
+                const textarea1 = document.getElementById('compare-textarea1');
+                const textarea2 = document.getElementById('compare-textarea2');
+                if (textarea1) {
+                    textarea1.value = state.json1 && state.json1 !== '{}' ? state.json1 : '';
+                    if (typeof updateLineNumbers !== 'undefined') {
+                        updateLineNumbers('compare-textarea1', 'compare-line-numbers1');
+                    }
+                }
+                if (textarea2) {
+                    textarea2.value = state.json2 && state.json2 !== '{}' ? state.json2 : '';
+                    if (typeof updateLineNumbers !== 'undefined') {
+                        updateLineNumbers('compare-textarea2', 'compare-line-numbers2');
+                    }
+                }
+            }, 50);
         }
     } catch (error) {
         console.error('Error in render():', error);
@@ -201,7 +256,4 @@ function render() {
             </div>`;
         }
     }
-    
 }
-
-

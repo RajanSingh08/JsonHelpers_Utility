@@ -5,7 +5,6 @@ Simple HTTP server that serves index.html by default
 import http.server
 import socketserver
 import os
-from urllib.parse import unquote
 
 class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     def end_headers(self):

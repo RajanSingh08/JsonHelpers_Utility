@@ -47,11 +47,43 @@ function renderFinderMode() {
                 <!-- Left Panel: JSON Input -->
                 <div class="${bgClass} flex flex-col" style="overflow: hidden; border-right: 1px solid ${state.darkMode ? '#374151' : '#e5e7eb'};">
                     <!-- Toolbar with buttons -->
-                      <div class="flex items-center justify-between px-3 py-1 border-b ${borderClass}" style="flex-shrink: 0; background: ${state.darkMode ? '#1f2937' : '#f9fafb'};">
-                        <h2 class="text-base font-semibold ${textClass} flex items-center gap-1.5">
-                            <span>JSON Input</span>
-                        </h2>
-                        <div class="flex gap-1.5">
+                      <div class="flex items-center px-3 py-1 border-b ${borderClass}" style="flex-shrink: 0; background: ${state.darkMode ? '#1f2937' : '#f9fafb'};">
+                        <div class="flex items-center gap-1.5 flex-1">
+                            <button 
+                                onclick="switchToJsonMode()"
+                                class="px-3 py-1 bg-gradient-to-r ${jsonFinderState.showColored ? 'from-gray-500 to-gray-600' : 'from-blue-500 to-blue-600'} text-white rounded text-xs font-medium hover:from-blue-600 hover:to-blue-700 transition-all flex items-center gap-1"
+                                title="Switch to JSON edit mode"
+                            >
+                                <span>JSON</span>
+                            </button>
+                            <button 
+                                onclick="handleJsonFinderFormat()" 
+                                class="px-3 py-1 bg-gradient-to-r ${jsonFinderState.showColored ? 'from-green-500 to-green-600' : 'from-gray-500 to-gray-600'} text-white rounded text-xs font-medium hover:from-green-600 hover:to-green-700 transition-all flex items-center gap-1"
+                                title="Format/Beautify JSON with color highlighting"
+                            >
+                                <span>Beautify</span>
+                            </button>
+                            <button 
+                                onclick="handleJsonFinderMinify()" 
+                                class="px-3 py-1 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded text-xs font-medium hover:from-purple-600 hover:to-purple-700 transition-all flex items-center gap-1"
+                                title="Minify JSON (remove whitespace)"
+                            >
+                                <span>Minify</span>
+                            </button>
+                            <button 
+                                onclick="handleJsonFinderReset()" 
+                                class="px-3 py-1 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded text-xs font-medium hover:from-gray-600 hover:to-gray-700 transition-all flex items-center gap-1"
+                                title="Clear JSON input"
+                            >
+                                <span>Reset</span>
+                            </button>
+                        </div>
+                        <div class="flex items-center justify-center flex-1">
+                            <h2 class="text-base font-semibold ${textClass} flex items-center gap-1.5">
+                                <span>JSON Input</span>
+                            </h2>
+                        </div>
+                        <div class="flex gap-1.5 flex-1 justify-end">
                             <button 
                                 onclick="downloadJsonInput()" 
                                 class="px-3 py-1 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded text-xs font-medium hover:from-emerald-600 hover:to-emerald-700 transition-all flex items-center justify-center"
@@ -97,42 +129,21 @@ function renderFinderMode() {
                                     <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
                                 </svg>
                             </button>
-                            <button 
-                                onclick="handleJsonFinderFormat()" 
-                                class="px-3 py-1 bg-gradient-to-r from-green-500 to-green-600 text-white rounded text-xs font-medium hover:from-green-600 hover:to-green-700 transition-all flex items-center gap-1"
-                                title="Format/Beautify JSON with color highlighting"
-                            >
-                                <span>Beautify</span>
-                            </button>
-                            <button 
-                                onclick="handleJsonFinderMinify()" 
-                                class="px-3 py-1 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded text-xs font-medium hover:from-purple-600 hover:to-purple-700 transition-all flex items-center gap-1"
-                                title="Minify JSON (remove whitespace)"
-                            >
-                                <span>Minify</span>
-                            </button>
-                            <button 
-                                onclick="handleJsonFinderReset()" 
-                                class="px-3 py-1 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded text-xs font-medium hover:from-gray-600 hover:to-gray-700 transition-all flex items-center gap-1"
-                                title="Clear JSON input"
-                            >
-                                <span>Reset</span>
-                            </button>
                         </div>
                     </div>
                     
                     <!-- Search Bar for Left Panel (Non-functional) -->
-                    <div class="px-2 py-1 border-b ${borderClass}" style="flex-shrink: 0; background: ${state.darkMode ? '#1f2937' : '#f9fafb'};">
+                    <!--<div class="px-2 py-1.5 border-b ${borderClass}" style="flex-shrink: 0; background: ${state.darkMode ? '#1f2937' : '#f9fafb'};">
                         <div class="flex items-center gap-1.5">
                             <input 
                                 type="text" 
                                 id="json-finder-search-left" 
                                 placeholder="Search in JSON..." 
                                 disabled
-                                class="flex-1 px-2 py-1 text-xs rounded border ${state.darkMode ? 'bg-gray-900 text-gray-100 border-gray-600' : 'bg-white text-gray-900 border-gray-300'} focus:outline-none focus:ring-1 focus:ring-blue-500 opacity-50 cursor-not-allowed"
+                                class="flex-1 px-2 py-1.5 text-xs rounded border ${state.darkMode ? 'bg-gray-900 text-gray-100 border-gray-600' : 'bg-white text-gray-900 border-gray-300'} focus:outline-none focus:ring-1 focus:ring-blue-500 opacity-50 cursor-not-allowed"
                             />
                         </div>
-                    </div>
+                    </div> -->
                     
                     <div class="px-2 pt-0 pb-2 flex flex-col" style="flex: 1; min-height: 0;">
                     ${jsonError ? `
@@ -145,12 +156,20 @@ function renderFinderMode() {
                         <div 
                             id="json-finder-colored-preview" 
                             class="flex-1 overflow-auto ${state.darkMode ? 'bg-gray-900' : 'bg-white'} rounded border ${borderClass}"
-                            style="min-height: 0; overflow-y: auto; overflow-x: auto; padding: 12px; position: relative; cursor: pointer;"
-                            onclick="jsonFinderState.showColored = false; render(); setTimeout(() => { const textarea = document.getElementById('json-finder-input'); if (textarea) { textarea.focus(); textarea.setSelectionRange(0, 0); } }, 50);"
-                            title="Click to edit JSON"
+                            style="min-height: 0; overflow-y: auto; overflow-x: auto; padding: 12px; position: relative;"
                         >
-                            <div style="position: absolute; top: 8px; right: 8px; background: ${state.darkMode ? 'rgba(0, 0, 0, 0.7)' : 'rgba(255, 255, 255, 0.9)'}; padding: 4px 8px; border-radius: 4px; font-size: 11px; color: ${state.darkMode ? '#9ca3af' : '#6b7280'}; pointer-events: none;">
-                                Click to edit
+                            <div style="position: absolute; top: 8px; right: 8px; display: flex; gap: 1.5px; z-index: 10;">
+                                <button 
+                                    onclick="copyJsonInput()" 
+                                    class="px-2.5 py-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded text-xs font-medium hover:from-blue-600 hover:to-blue-700 transition-all flex items-center justify-center shadow-lg"
+                                    style="box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);"
+                                    title="Copy JSON to clipboard"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                    </svg>
+                                </button>
                             </div>
                             ${renderJsonViewer(parsedJson)}
                         </div>
@@ -172,12 +191,9 @@ function renderFinderMode() {
                 <!-- Right Panel: Tree View / Viewer View -->
                 <div class="${bgClass} flex flex-col" style="overflow: hidden;">
                     <!-- View Toggle Header -->
-                    <div class="flex justify-between items-center px-3 py-1 border-b ${borderClass}" style="flex-shrink: 0; background: ${state.darkMode ? '#1f2937' : '#f9fafb'};">
-                        <h2 class="text-base font-semibold ${textClass} flex items-center gap-1.5">
-                            <span>View</span>
-                        </h2>
-                        <div class="flex gap-1.5">
-                            <button 
+                    <div class="flex items-center px-3 py-1 border-b ${borderClass}" style="flex-shrink: 0; background: ${state.darkMode ? '#1f2937' : '#f9fafb'};">
+                        <div class="flex items-center gap-1.5 flex-1">
+                                    <button 
                                 onclick="jsonFinderState.viewMode = 'treePath'; render(); setTimeout(() => updateJsonFinderTree(), 50);"
                                 class="px-2.5 py-1 rounded text-xs font-medium transition-all flex items-center gap-1 ${jsonFinderState.viewMode === 'treePath' ? 'bg-blue-500 text-white' : 'bg-gray-300 text-gray-700 hover:bg-gray-400'}"
                                 title="Tree Path View"
@@ -190,23 +206,17 @@ function renderFinderMode() {
                                 title="Tree Viewer"
                             >
                                 <span>Tree Viewer</span>
-                            </button>
-                        </div>
+                                    </button>
+                                </div>
+                        <div class="flex items-center justify-center flex-1">
+                            <h2 class="text-base font-semibold ${textClass} flex items-center gap-1.5">
+                                <span>JSON Viewer</span>
+                            </h2>
+                            </div>
+                        <div class="flex-1"></div>
                     </div>
                     
                     ${jsonFinderState.viewMode === 'treePath' ? `
-                        <!-- Search Bar for Tree View (Non-functional) -->
-                        <div class="px-2 py-1 border-b ${borderClass}" style="flex-shrink: 0; background: ${state.darkMode ? '#1f2937' : '#f9fafb'};">
-                            <div class="flex items-center gap-1.5">
-                                    <input 
-                                        type="text" 
-                                    id="json-finder-search-right" 
-                                    placeholder="Search in tree..." 
-                                    disabled
-                                    class="flex-1 px-2 py-1 text-xs rounded border ${state.darkMode ? 'bg-gray-900 text-gray-100 border-gray-600' : 'bg-white text-gray-900 border-gray-300'} focus:outline-none focus:ring-1 focus:ring-blue-500 opacity-50 cursor-not-allowed"
-                                />
-                            </div>
-                        </div>
                         
                         <div class="px-2 pt-0 pb-0" style="flex-shrink: 0;">
                             <!-- Path Display - Simple one line -->
@@ -215,24 +225,16 @@ function renderFinderMode() {
                                     <label class="text-xs font-bold ${state.darkMode ? 'text-indigo-300' : 'text-indigo-700'} whitespace-nowrap flex items-center gap-0.5">
                                         <span>Path:</span>
                                     </label>
-                                    <span id="json-finder-path-display" class="flex-1 text-xs font-mono ${state.darkMode ? 'text-indigo-200' : 'text-indigo-800'}">
+                                    <span id="json-finder-path-display" class="flex-1 font-mono ${state.darkMode ? 'text-indigo-200' : 'text-indigo-800'}" style="font-size: 14px;">
                                         ${jsonFinderState.selectedPath ? convertPathToX(jsonFinderState.selectedPath) : 'Select an item to view its path'}
                                     </span>
                                     <button 
                                         onclick="copyJsonFinderPath()" 
                                         class="px-1.5 py-0.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded text-xs font-medium hover:from-blue-600 hover:to-blue-700 whitespace-nowrap transition-all flex items-center gap-0.5"
-                                        ${!jsonFinderState.selectedPath ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''}
+                                        ${!parsedJson || jsonError ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''}
                                         title="Copy Path"
                                     >
                                         <span>Copy Path</span>
-                                    </button>
-                                    <button 
-                                        onclick="copyJsonFinderValue()" 
-                                        class="px-1.5 py-0.5 bg-gradient-to-r from-green-500 to-green-600 text-white rounded text-xs font-medium hover:from-green-600 hover:to-green-700 whitespace-nowrap transition-all flex items-center gap-0.5"
-                                        ${!jsonFinderState.selectedValue ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''}
-                                        title="Copy Value"
-                                    >
-                                        <span>Copy Value</span>
                                     </button>
                                 </div>
                             </div>
@@ -251,20 +253,8 @@ function renderFinderMode() {
                             </div>
                         `}
                     </div>
-                        </div>
+                </div>
                     ` : `
-                        <!-- Search Bar for Tree Viewer (Non-functional) -->
-                        <div class="px-2 py-1 border-b ${borderClass}" style="flex-shrink: 0; background: ${state.darkMode ? '#1f2937' : '#f9fafb'};">
-                            <div class="flex items-center gap-1.5">
-                                <input 
-                                    type="text" 
-                                    id="json-finder-search-tree-viewer" 
-                                    placeholder="Search in Tree Viewer..." 
-                                    disabled
-                                    class="flex-1 px-2 py-1 text-xs rounded border ${state.darkMode ? 'bg-gray-900 text-gray-100 border-gray-600' : 'bg-white text-gray-900 border-gray-300'} focus:outline-none focus:ring-1 focus:ring-blue-500 opacity-50 cursor-not-allowed"
-                                />
-                            </div>
-                        </div>
                         
                         <!-- Tree Viewer Container -->
                         <div class="px-2 pt-0 pb-2 flex flex-col" style="flex: 1; min-height: 0;">
@@ -545,10 +535,12 @@ function renderTreeViewer(obj, key, level, path = '') {
         // Child levels
         if (isObject || isArray) {
             const bracketType = isArray ? '[]' : '{}';
+            const escapedKey = escapeHtml(String(key));
+            const safeKey = escapedKey.replace(/'/g, "\\'").replace(/"/g, '&quot;');
             html += `<div style="${lineStyle}" onclick="toggleTreeViewer('${currentPath}');">
                 <span style="${expandIconStyle}">${isExpanded ? '−' : '+'}</span>
                 <span style="color: ${bracketColor}; font-weight: 900; font-size: 16px;">${bracketType}</span>
-                <span style="color: ${keyColor}; font-weight: 500;">${escapeHtml(String(key))}</span>
+                <span style="color: ${keyColor}; font-weight: 500; cursor: pointer;" onclick="event.stopPropagation(); copyTreeViewerKey('${safeKey}', this);">${escapedKey}</span>
             </div>`;
             
             if (isExpanded && hasChildren) {
@@ -592,12 +584,12 @@ function renderTreeViewer(obj, key, level, path = '') {
             
             const escapedPath = escapeHtml(currentPath);
             const valueJson = escapeHtml(JSON.stringify(obj));
+            const escapedKey = escapeHtml(String(key));
             html += `<div style="${lineStyle}" onclick="selectTreeViewerValueFromElement(this);" data-path="${escapedPath}" data-value="${valueJson}">
                 <span style="display: inline-block; width: 8px; height: 8px; background-color: ${squareBoxColor}; border: 1px solid ${squareBoxColor}; margin-right: 4px; flex-shrink: 0; border-radius: 2px;"></span>
-                <span style="color: ${keyColor}; font-weight: 500;">${escapeHtml(String(key))}</span>
+                <span class="tree-viewer-key" style="color: ${keyColor}; font-weight: 500; cursor: pointer;" onclick="event.stopPropagation(); copyTreeViewerKey('${escapedKey.replace(/'/g, "\\'")}', this);">${escapedKey}</span>
                 <span style="color: ${colonColor};">:</span>
-                <span style="${valueStyle}">${valueDisplay}</span>
-                <span style="margin-left: 8px; font-size: 11px; color: #10b981; display: none;" class="copy-icon-tree-viewer" title="Copied!">[Copied!]</span>
+                <span class="tree-viewer-value" style="${valueStyle}">${valueDisplay}</span>
             </div>`;
         }
     }
@@ -615,6 +607,29 @@ function toggleTreeViewer(path) {
         jsonFinderState.treeViewerExpanded.add(path);
     }
     updateTreeViewer();
+}
+
+/**
+ * Copy key in Tree Viewer (called from onclick)
+ */
+async function copyTreeViewerKey(key, element) {
+    try {
+        await navigator.clipboard.writeText(key);
+        // Show feedback inline like Tree Path - replace key text with "Copied!"
+        const keySpan = element || window.event?.target;
+        if (keySpan && keySpan.classList.contains('tree-viewer-key')) {
+            const originalText = keySpan.textContent;
+            const originalColor = keySpan.style.color;
+            keySpan.textContent = 'Copied!';
+            keySpan.style.color = state.darkMode ? '#10b981' : '#059669';
+            setTimeout(() => {
+                keySpan.textContent = originalText;
+                keySpan.style.color = originalColor;
+            }, 1000);
+        }
+    } catch (error) {
+        console.error('Failed to copy key:', error);
+    }
 }
 
 /**
@@ -650,16 +665,17 @@ async function selectTreeViewerValue(path, value, clickedElement) {
             : String(value);
         await navigator.clipboard.writeText(valueToCopy);
         
-        // Show feedback on the clicked element
+        // Show feedback inline like Tree Path - replace value text with "Copied!"
         if (clickedElement) {
-            const copyIcon = clickedElement.querySelector('.copy-icon-tree-viewer');
-            if (copyIcon) {
-                // Show the feedback
-                copyIcon.style.display = 'inline';
-                copyIcon.style.color = '#10b981';
-                // Hide after 1 second
+            const valueSpan = clickedElement.querySelector('.tree-viewer-value');
+            if (valueSpan) {
+                const originalText = valueSpan.textContent;
+                const originalColor = valueSpan.style.color;
+                valueSpan.textContent = 'Copied!';
+                valueSpan.style.color = state.darkMode ? '#10b981' : '#059669';
                 setTimeout(() => {
-                    copyIcon.style.display = 'none';
+                    valueSpan.textContent = originalText;
+                    valueSpan.style.color = originalColor;
                 }, 1000);
             }
         }
@@ -742,6 +758,10 @@ async function updateJsonFinderTree() {
         return;
     }
     
+    // Preserve scroll position
+    const scrollTop = treeContainer.scrollTop;
+    const selectedPath = jsonFinderState.selectedPath;
+    
     // Parse JSON
     let parsedJson = null;
     const jsonText = (state.json1 && state.json1.trim()) ? state.json1.trim() : '';
@@ -779,6 +799,19 @@ async function updateJsonFinderTree() {
     treeContainer.innerHTML = '';
     try {
         renderJsonTree(parsedJson, treeContainer, rootPath, 0, null);
+        
+            // Restore scroll position
+            setTimeout(() => {
+                treeContainer.scrollTop = scrollTop;
+                
+                // Scroll to selected path if exists
+                if (selectedPath) {
+                    const selectedNode = treeContainer.querySelector(`[data-path="${selectedPath}"]`);
+                    if (selectedNode) {
+                        selectedNode.scrollIntoView({ behavior: 'auto', block: 'center' });
+                    }
+                }
+            }, 10);
     } catch (e) {
         console.error('Error rendering tree:', e);
         treeContainer.innerHTML = `
@@ -841,9 +874,29 @@ function renderJsonTree(obj, container, path, level, key = null) {
         if (key !== null) {
             const keySpan = document.createElement('span');
             // Key color - blue
-            keySpan.setAttribute('style', `color: ${state.darkMode ? '#7dd3fc' : '#0284c7'} !important; font-weight: 600;`);
+            keySpan.setAttribute('style', `color: ${state.darkMode ? '#7dd3fc' : '#0284c7'} !important; font-weight: 600; cursor: pointer;`);
             keySpan.textContent = typeof key === 'number' ? `[${key}]` : `"${key}"`;
+            keySpan.className = 'json-key-clickable';
             nodeDiv.appendChild(keySpan);
+            
+            // Click to copy key
+            keySpan.onclick = async (e) => {
+                e.stopPropagation();
+                try {
+                    const keyToCopy = typeof key === 'number' ? String(key) : key;
+                    await navigator.clipboard.writeText(keyToCopy);
+                    const originalColor = keySpan.style.color;
+                    keySpan.style.color = state.darkMode ? '#10b981' : '#059669';
+                    const originalText = keySpan.textContent;
+                    keySpan.textContent = '✓ Copied!';
+                    setTimeout(() => {
+                        keySpan.textContent = originalText;
+                        keySpan.style.color = originalColor;
+                    }, 1000);
+                } catch (error) {
+                    console.error('Failed to copy key:', error);
+                }
+            };
             
             const colonSpan = document.createElement('span');
             colonSpan.textContent = ': ';
@@ -853,9 +906,45 @@ function renderJsonTree(obj, container, path, level, key = null) {
         
         const valueSpan = document.createElement('span');
         // Null color - purple/magenta
-        valueSpan.setAttribute('style', `color: ${state.darkMode ? '#c084fc' : '#9333ea'} !important; font-style: italic;`);
+        valueSpan.setAttribute('style', `color: ${state.darkMode ? '#c084fc' : '#9333ea'} !important; font-style: italic; cursor: pointer;`);
         valueSpan.textContent = 'null';
+        valueSpan.className = 'json-value-clickable';
+        valueSpan.setAttribute('data-path', path);
+        valueSpan.setAttribute('data-value', 'null');
+        
+        // Click to copy value
+        valueSpan.onclick = async (e) => {
+            e.stopPropagation();
+            try {
+                await navigator.clipboard.writeText('null');
+                const originalColor = valueSpan.style.color;
+                valueSpan.style.color = state.darkMode ? '#10b981' : '#059669';
+                valueSpan.textContent = '✓ Copied!';
+                setTimeout(() => {
+                    valueSpan.textContent = 'null';
+                    valueSpan.style.color = originalColor;
+                }, 1000);
+            } catch (error) {
+                console.error('Failed to copy:', error);
+            }
+        };
+        
         nodeDiv.appendChild(valueSpan);
+        
+        // Handle click on line (not value or key)
+        nodeDiv.onclick = async (e) => {
+            if (e.target === valueSpan || e.target.closest('.json-value-clickable') || e.target.closest('.json-key-clickable')) {
+                return;
+            }
+            e.stopPropagation();
+            jsonFinderState.selectedPath = path;
+            jsonFinderState.selectedValue = null;
+            const pathDisplay = document.getElementById('json-finder-path-display');
+            if (pathDisplay) {
+                pathDisplay.textContent = convertPathToX(path);
+            }
+        };
+        
         container.appendChild(nodeDiv);
         return;
     }
@@ -864,9 +953,29 @@ function renderJsonTree(obj, container, path, level, key = null) {
         if (key !== null) {
             const keySpan = document.createElement('span');
             // Key color - blue
-            keySpan.setAttribute('style', `color: ${state.darkMode ? '#7dd3fc' : '#0284c7'} !important; font-weight: 600;`);
+            keySpan.setAttribute('style', `color: ${state.darkMode ? '#7dd3fc' : '#0284c7'} !important; font-weight: 600; cursor: pointer;`);
             keySpan.textContent = typeof key === 'number' ? `[${key}]` : `"${key}"`;
+            keySpan.className = 'json-key-clickable';
             nodeDiv.appendChild(keySpan);
+            
+            // Click to copy key
+            keySpan.onclick = async (e) => {
+                e.stopPropagation();
+                try {
+                    const keyToCopy = typeof key === 'number' ? String(key) : key;
+                    await navigator.clipboard.writeText(keyToCopy);
+                    const originalColor = keySpan.style.color;
+                    keySpan.style.color = state.darkMode ? '#10b981' : '#059669';
+                    const originalText = keySpan.textContent;
+                    keySpan.textContent = '✓ Copied!';
+                    setTimeout(() => {
+                        keySpan.textContent = originalText;
+                        keySpan.style.color = originalColor;
+                    }, 1000);
+                } catch (error) {
+                    console.error('Failed to copy key:', error);
+                }
+            };
             
             const colonSpan = document.createElement('span');
             colonSpan.textContent = ': ';
@@ -895,12 +1004,39 @@ function renderJsonTree(obj, container, path, level, key = null) {
         }
         
         const valueSpan = document.createElement('span');
-        valueSpan.setAttribute('style', `color: ${valueColor} !important;`);
+        valueSpan.setAttribute('style', `color: ${valueColor} !important; cursor: pointer;`);
         valueSpan.textContent = valueText;
+        valueSpan.className = 'json-value-clickable';
+        valueSpan.setAttribute('data-path', path);
+        valueSpan.setAttribute('data-value', JSON.stringify(obj));
+        
+        // Click to copy value directly
+        valueSpan.onclick = async (e) => {
+            e.stopPropagation();
+            try {
+                const valueToCopy = typeof obj === 'object' ? JSON.stringify(obj, null, 2) : String(obj);
+                await navigator.clipboard.writeText(valueToCopy);
+                // Show feedback
+                const originalColor = valueSpan.style.color;
+                valueSpan.style.color = state.darkMode ? '#10b981' : '#059669';
+                valueSpan.textContent = '✓ Copied!';
+                setTimeout(() => {
+                    valueSpan.textContent = valueText;
+                    valueSpan.style.color = originalColor;
+                }, 1000);
+            } catch (error) {
+                console.error('Failed to copy:', error);
+            }
+        };
+        
         nodeDiv.appendChild(valueSpan);
         
-        // Handle click - select path and value for leaf nodes
+        // Handle click on line (not value or key) - select path and value for leaf nodes
         nodeDiv.onclick = async (e) => {
+            // Don't handle if clicked on value span or key span
+            if (e.target === valueSpan || e.target.closest('.json-value-clickable') || e.target.closest('.json-key-clickable')) {
+                return;
+            }
             e.stopPropagation();
             jsonFinderState.selectedPath = path;
             
@@ -922,7 +1058,11 @@ function renderJsonTree(obj, container, path, level, key = null) {
                 jsonFinderState.selectedValue = null;
             }
             
-            render();
+            // Update only path display, don't re-render tree
+            const pathDisplay = document.getElementById('json-finder-path-display');
+            if (pathDisplay) {
+                pathDisplay.textContent = convertPathToX(path);
+            }
         };
         
         container.appendChild(nodeDiv);
@@ -963,9 +1103,29 @@ function renderJsonTree(obj, container, path, level, key = null) {
     if (key !== null) {
         const keySpan = document.createElement('span');
         // Key color - blue
-        keySpan.setAttribute('style', `color: ${state.darkMode ? '#7dd3fc' : '#0284c7'} !important; font-weight: 600;`);
+        keySpan.setAttribute('style', `color: ${state.darkMode ? '#7dd3fc' : '#0284c7'} !important; font-weight: 600; cursor: pointer;`);
         keySpan.textContent = typeof key === 'number' ? `[${key}]` : `"${key}"`;
+        keySpan.className = 'json-key-clickable';
         nodeDiv.appendChild(keySpan);
+        
+        // Click to copy key
+        keySpan.onclick = async (e) => {
+            e.stopPropagation();
+            try {
+                const keyToCopy = typeof key === 'number' ? String(key) : key;
+                await navigator.clipboard.writeText(keyToCopy);
+                const originalColor = keySpan.style.color;
+                keySpan.style.color = state.darkMode ? '#10b981' : '#059669';
+                const originalText = keySpan.textContent;
+                keySpan.textContent = '✓ Copied!';
+                setTimeout(() => {
+                    keySpan.textContent = originalText;
+                    keySpan.style.color = originalColor;
+                }, 1000);
+            } catch (error) {
+                console.error('Failed to copy key:', error);
+            }
+        };
         
         const colonSpan = document.createElement('span');
         colonSpan.textContent = ': ';
@@ -981,6 +1141,10 @@ function renderJsonTree(obj, container, path, level, key = null) {
     
     // Handle click on entire line - expand/collapse if has children, otherwise select path and value
     nodeDiv.onclick = async (e) => {
+        // Don't handle if clicked on value span or key span
+        if (e.target.closest('.json-value-clickable') || e.target.closest('.json-key-clickable')) {
+            return;
+        }
         e.stopPropagation();
         
         // If it has children, toggle expand/collapse
@@ -1013,7 +1177,11 @@ function renderJsonTree(obj, container, path, level, key = null) {
                 jsonFinderState.selectedValue = null;
             }
             
-            render();
+            // Update only path display, don't re-render tree
+            const pathDisplay = document.getElementById('json-finder-path-display');
+            if (pathDisplay) {
+                pathDisplay.textContent = convertPathToX(path);
+            }
         }
     };
     
@@ -1058,12 +1226,32 @@ function convertPathFromX(path) {
  * Copy path to clipboard
  */
 async function copyJsonFinderPath() {
-    if (!jsonFinderState.selectedPath) return;
+    // Check if valid JSON exists
+    let hasValidJson = false;
+    try {
+        if (state.json1 && state.json1.trim() && state.json1 !== '{}') {
+            JSON.parse(state.json1);
+            hasValidJson = true;
+        }
+    } catch (e) {
+        hasValidJson = false;
+    }
+    
+    if (!hasValidJson) {
+        alert('Please enter valid JSON first.');
+        return;
+    }
+    
+    if (!jsonFinderState.selectedPath) {
+        alert('No path to copy. Please select an item first.');
+        return;
+    }
     
     try {
         // Copy the x. version (user-friendly)
         const pathToCopy = convertPathToX(jsonFinderState.selectedPath);
         await navigator.clipboard.writeText(pathToCopy);
+        
         // Show feedback
         const pathDisplay = document.getElementById('json-finder-path-display');
         if (pathDisplay) {
@@ -1079,32 +1267,6 @@ async function copyJsonFinderPath() {
     }
 }
 
-/**
- * Copy value to clipboard
- */
-async function copyJsonFinderValue() {
-    if (!jsonFinderState.selectedValue) return;
-    
-    try {
-        // Copy the value as JSON string
-        const valueToCopy = typeof jsonFinderState.selectedValue === 'object' 
-            ? JSON.stringify(jsonFinderState.selectedValue, null, 2)
-            : String(jsonFinderState.selectedValue);
-        await navigator.clipboard.writeText(valueToCopy);
-        // Show feedback
-        const pathDisplay = document.getElementById('json-finder-path-display');
-        if (pathDisplay) {
-            const original = pathDisplay.textContent;
-            pathDisplay.textContent = 'Value Copied!';
-            setTimeout(() => {
-                pathDisplay.textContent = original;
-            }, 1000);
-        }
-    } catch (error) {
-        console.error('Failed to copy value:', error);
-        alert('Failed to copy value to clipboard');
-    }
-}
 
 /**
  * Download JSON input as file
@@ -1395,6 +1557,32 @@ async function shareJsonInput() {
 }
 
 /**
+ * Switch to JSON edit mode and format JSON if it's minified
+ */
+function switchToJsonMode() {
+    jsonFinderState.showColored = false;
+    
+    // Format JSON if it's minified (single line)
+    if (state.json1 && state.json1.trim() && state.json1 !== '{}' && !state.json1.includes('\n')) {
+        try {
+            const parsed = JSON.parse(state.json1);
+            state.json1 = JSON.stringify(parsed, null, 2);
+        } catch (e) {
+            // Invalid JSON, skip formatting
+        }
+    }
+    
+    render();
+    setTimeout(() => {
+        const textarea = document.getElementById('json-finder-input');
+        if (textarea) {
+            textarea.setSelectionRange(0, 0);
+            textarea.focus();
+        }
+    }, 50);
+}
+
+/**
  * Format JSON (Beautify)
  */
 async function handleJsonFinderFormat() {
@@ -1405,58 +1593,47 @@ async function handleJsonFinderFormat() {
     
     try {
         // Try API first
-    try {
         const response = await fetch(`${API_BASE}/api/format`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ json: state.json1 })
         });
         
-            if (response.ok) {
+        if (response.ok) {
         const data = await response.json();
         if (data.formatted) {
             state.json1 = data.formatted;
-                    // Update textarea directly and trigger input handler
-                    const textarea = document.getElementById('json-finder-input');
-                    if (textarea) {
-                        textarea.value = data.formatted;
-                        // Trigger input event to update tree
-                        handleJsonFinderInput(data.formatted);
-                    }
-                    // Enable colored preview and update it
-                    jsonFinderState.showColored = true;
-            render();
-                    setTimeout(() => updateColoredPreview(), 50);
-                    return;
+                const textarea = document.getElementById('json-finder-input');
+                if (textarea) {
+                    textarea.value = data.formatted;
+                    handleJsonFinderInput(data.formatted);
                 }
-            }
-        } catch (apiError) {
-            console.warn('API format failed, using client-side fallback:', apiError);
-        }
-        
-        // Client-side fallback
-        try {
-            const parsed = JSON.parse(state.json1);
-            const formatted = JSON.stringify(parsed, null, 2);
-            state.json1 = formatted;
-            
-            // Update textarea directly and trigger input handler
-            const textarea = document.getElementById('json-finder-input');
-            if (textarea) {
-                textarea.value = formatted;
-                // Trigger input event to update tree
-                handleJsonFinderInput(formatted);
-            }
-            // Enable colored preview and update it
-            jsonFinderState.showColored = true;
+                jsonFinderState.showColored = true;
             render();
-            setTimeout(() => updateColoredPreview(), 50);
-        } catch (parseError) {
-            alert('Invalid JSON: ' + parseError.message);
+                setTimeout(() => updateColoredPreview(), 50);
+                return;
+            }
         }
-    } catch (error) {
-        console.error('Format error:', error);
-        alert('Failed to format JSON: ' + error.message);
+    } catch (apiError) {
+        console.warn('API format failed, using client-side fallback:', apiError);
+    }
+    
+    // Client-side fallback
+    try {
+        const parsed = JSON.parse(state.json1);
+        const formatted = JSON.stringify(parsed, null, 2);
+        state.json1 = formatted;
+        
+        const textarea = document.getElementById('json-finder-input');
+        if (textarea) {
+            textarea.value = formatted;
+            handleJsonFinderInput(formatted);
+        }
+        jsonFinderState.showColored = true;
+        render();
+        setTimeout(() => updateColoredPreview(), 50);
+    } catch (parseError) {
+        alert('Invalid JSON: ' + parseError.message);
     }
 }
 
@@ -1480,31 +1657,20 @@ async function handleJsonFinderMinify() {
         const textarea = document.getElementById('json-finder-input');
         if (textarea) {
             textarea.value = minified;
-            // Trigger input handler to update tree and other views
             handleJsonFinderInput(minified);
-            
-            // Set cursor to leftmost position (position 0)
-            setTimeout(() => {
-                const updatedTextarea = document.getElementById('json-finder-input');
-                if (updatedTextarea) {
-                    updatedTextarea.setSelectionRange(0, 0);
-                    updatedTextarea.focus();
-                }
-            }, 50);
         } else {
-            // If textarea doesn't exist yet, just render and update tree
             render();
             await updateJsonFinderTree();
-            
-            // Set cursor to leftmost position after render
-            setTimeout(() => {
-                const updatedTextarea = document.getElementById('json-finder-input');
-                if (updatedTextarea) {
-                    updatedTextarea.setSelectionRange(0, 0);
-                    updatedTextarea.focus();
-                }
-            }, 50);
         }
+        
+        // Set cursor to leftmost position
+        setTimeout(() => {
+            const updatedTextarea = document.getElementById('json-finder-input');
+            if (updatedTextarea) {
+                updatedTextarea.setSelectionRange(0, 0);
+                updatedTextarea.focus();
+            }
+        }, 50);
     } catch (error) {
         console.error('Minify error:', error);
         alert('Failed to minify JSON: ' + error.message);
